@@ -1,0 +1,54 @@
+package org.sumboot.sumFrame.mvc.services;
+
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import org.springframework.stereotype.Service;
+import org.sumboot.sumFrame.data.dao.common.MyBatisDAO;
+import org.sumboot.sumFrame.utils.RETURN;
+import org.sumboot.sumFrame.tools.ReturnUtil;
+
+import java.util.HashMap;
+import java.util.List;
+
+/**
+ * Created by thinkpad on 2017/9/13.
+ */
+@Service
+public class defaultService extends serviceAbstract{
+    @Override
+    public ReturnUtil execute() throws Exception {
+        return RETURN.SUCCESS;
+    }
+
+    @Override
+    public ReturnUtil init() throws Exception {
+        this.getoutpool().put("mt",this.getinpool().get("mt"));
+        this.getoutpool().put("authToken",this.getinpool().get("authToken"));
+        this.getoutpool().put("remote-ip",this.getinpool().get("remote-ip"));
+        this.getoutpool().put("url",this.getinpool().get("url"));
+        this.getoutpool().put("referer",this.getinpool().get("referer"));
+        return RETURN.SUCCESS;
+    }
+
+    @Override
+    public ReturnUtil query() throws Exception {
+        HashMap<String, Object> Param = this.getinpool();//form
+
+
+        String dealType = (String)Param.get("deal-type");
+        switch(dealType) {
+            case "PAGEtest":
+                MyBatisDAO myBatisDAO=(MyBatisDAO) this.getDaoFactory().get("myBatisDAO");
+
+                PageHelper.startPage(this.getPageNum(), this.getPageSize());//getValidStaffListBycond
+                List<HashMap<String,String>> array = (List<HashMap<String,String>>) myBatisDAO.getCartAttribute();
+                PageInfo page = new PageInfo(array);
+                this.getoutpool().put("CartAttr",page);
+                break;
+            default:
+                break;
+        }
+
+        return RETURN.SUCCESS;
+    }
+}
