@@ -5,7 +5,7 @@ PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
 <configuration>
 	<!-- 命名空间 -->
 	<typeAliases>
-        <package name="org.sumboot.sumFrame.data.orm0"/>
-        <package name="org.sumboot.sumFrame.data.orm"/>
+        <package name="org.sumbootFrame.sumFrame.data.orm0"/>
+        <package name="org.sumbootFrame.sumFrame.data.orm"/>
     </typeAliases>
 </configuration>

@@ -2,7 +2,7 @@
 <!DOCTYPE mapper
  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="org.sumboot.sumFrame.data.dao.common.MyBatisCommDAO">
+<mapper namespace="org.sumbootFrame.data.dao.common.MyBatisCommDAO">
 
 	<select id="getSysdate" parameterType="String" resultType="String">
 		${sysdateSql}
