@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.sumboot.sumFrame.data.mao.RedisDao;
 import org.sumboot.sumFrame.mvc.interfaces.ServiceInterface;
 import org.sumboot.sumFrame.tools.config.*;
@@ -76,12 +77,12 @@ public class MainController {
     public void setHmContext(HashMap<String, Object> hmContext){this.hmContext=hmContext;}
     public void setHmPagedata(HashMap<String, Object> hmPagedata){this.hmPagedata = hmPagedata;}
 
-    public HashMap<String, Object> getSessionContext(String sessionKey) {
+    public HashMap<String, Object> getSessionContext(String sessionField) {
         HashMap<String, Object> sessionContext;
         RedisDao redisDao;
         try {
             redisDao = (RedisDao) context.getBean("RedisDao");
-            sessionContext = redisDao.read(appconf.getSessionChannel()+"-"+this.getAuthToken(),sessionKey);
+            sessionContext = redisDao.read(appconf.getSessionChannel()+"-"+this.getAuthToken(),sessionField);
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
@@ -92,13 +93,13 @@ public class MainController {
         return sessionContext;
     }
 
-    public void setSessionContext(HashMap<String, Object> sessionContext,String sessionKey) {
+    public void setSessionContext(HashMap<String, Object> sessionContext,String sessionField) {
         RedisDao redisDao;
         try {
             redisDao = (RedisDao) context.getBean(
                     "RedisDao");
 //            System.out.println(appconf.getSessionChannel()+"--"+this.getAuthToken()+"--"+sessionContext);
-            redisDao.save(appconf.getSessionChannel()+"-"+this.getAuthToken(), sessionKey,
+            redisDao.save(appconf.getSessionChannel()+"-"+this.getAuthToken(), sessionField,
                     (Object)sessionContext, appconf.getSessionTimeout());
         } catch (Exception e) {
             e.printStackTrace();
@@ -221,9 +222,6 @@ public class MainController {
         }
     }
     public void conformHmPagedata(HashMap<String, Object> formdata,HashMap<String, Object> jsonbody){
-//        for(String key:urldata.keySet()){
-//            this.getHmPagedata().put(key,urldata.get(key));
-//        }
         for(String key:formdata.keySet()){
             this.getHmPagedata().put(key,formdata.get(key));
         }
@@ -266,10 +264,6 @@ public class MainController {
                     }
                 }
             }
-        }
-        //url路径没有令牌(TGT)，Cookies没有令牌，系统生成令牌放入Cookies
-        if (StringUtils.isEmpty(this.getAuthToken())) {
-            this.setAuthToken(JugUtil.getLongUuid());
         }
         cookies.put(appconf.getTokenName(), this.getAuthToken());
         this.setCookies(cookies);
@@ -320,14 +314,15 @@ public class MainController {
     }
     @RequestMapping(value = "/{module}/{executor}",method = {RequestMethod.POST, RequestMethod.GET})
     public HashMap<String, Object> core(HttpServletRequest request,
-                             HttpServletResponse response,
-                             @PathVariable String module,
-                             @PathVariable(value = "executor") String executor,
-                             @RequestParam(value = "mt", required = false, defaultValue = "0") String mt,
-                             @RequestParam(value = "auth-token", required = false) String authToken,
-                             @RequestParam(value = "ct", required = false) String cacheToken)throws Exception {
+                                        HttpServletResponse response,
+                                        @PathVariable String module,
+                                        @PathVariable(value = "executor") String executor,
+                                        @RequestParam(value = "st", required = false) String serviceTicket,
+                                        @RequestParam(value = "ct", required = false) String cacheToken,
+                                        @RequestParam(value = "upload-file", required = false) MultipartFile[] uploadFile,  // 文件上传参数
+                                        @RequestParam(value = "fileName",required = false)String[] fileName)throws Exception {
 
-        return coredefault(request,response,module,executor,mt,authToken,cacheToken);
+        return coredefault(request,response,module,executor,serviceTicket,cacheToken,uploadFile,fileName);
     }
     @RequestMapping(value = "/{module}",method = {RequestMethod.POST, RequestMethod.GET})
     public HashMap<String, Object> coredefault
@@ -335,17 +330,16 @@ public class MainController {
              HttpServletResponse response,
              @PathVariable String module,
              @RequestParam(value = "et", required = false) String et,
-             @RequestParam(value = "mt", required = false, defaultValue = "0") String mt,
-             @RequestParam(value = "auth-token", required = false) String authToken,
-             @RequestParam(value = "ct", required = false) String cacheToken                    // 请求参数缓存令牌
-              )throws Exception {
-        this.setAuthToken(authToken);//令牌来自，1、url路径(CAS重定向所得)，2、Cookies，都存在以路径为先
+             @RequestParam(value = "st", required = false) String serviceTicket,
+             @RequestParam(value = "ct", required = false) String cacheToken ,                   // 请求参数缓存令牌
+             @RequestParam(value = "upload-file", required = false) MultipartFile[] uploadFile,  // 文件上传参数
+             @RequestParam(value = "fileName",required = false)String[] fileName)throws Exception {
+        this.setAuthToken(null);//令牌来自Cookies
 
         /* +---------------------初始化数据暂时存储结构----------------------------+ */
         HashMap<String, Object> urldata = new HashMap<>();
         HashMap<String, Object> formdata = new HashMap<>();
         HashMap<String, Object> jsonbody = new HashMap<>();//参数的三个来源
-        HashMap<String, Object> cachedata = new HashMap<>();
         /* +--------------------------请求路径透明化处理--------------------------+ */
         String executor = getExecutor(module, et);
         if (StringUtils.isEmpty(executor)) {
@@ -358,13 +352,9 @@ public class MainController {
         /* +------------------------- 获取cookies参数 -------------------------+ */
         handleCookies(request);
         /*-------------------------初始化请求路径通用参------------------------+*/
-//        urldata.put("authToken", this.getAuthToken());
-        if (mt.equals("0")) urldata.put("mt", "init");
-        if (mt.equals("1")) urldata.put("mt", "query");
-        if (mt.equals("2")) urldata.put("mt", "execute");
+//      urldata.put("authToken", this.getAuthToken());
         /* +------------------------- 处理请求路径url参数 ----------------------------+ */
         handleRequestUrl(request, urldata);
-
         try {
         /* +-------------------------处理请求体中的json数据-------------------+ */
             if (request.getHeader("Content-Type") != null && request.getHeader("Content-Type").contains("application/json")) {
@@ -385,19 +375,23 @@ public class MainController {
         }else{
             this.setHmPagedata(this.getCache(cacheToken));
         }
-
+        /*-------------------------上传文件参数传递给业务层--------------------+*/
+        if (uploadFile != null) {
+            this.getHmPagedata().put("uploadFile", uploadFile);
+            this.getHmPagedata().put("fileName",fileName);
+        }
         /* +-------------------------session相关处理--------------------------+ */
         // SESSION登陆验证，统一验证的方式有待在考虑
         //1.判断是否需要验证
-        //2.判断request有没有令牌
-        //3.请求cas获取令牌
-        //4.令牌入session
+        //2.判断session中是否有ST（根据autotoken）
+        //3.请求cas获取ST （服务提供方唯一标识+服务调用方唯一标识(autotoken)，需要鉴权方法名(excuter/dealtype)，ST）
+        // 3.1，CAS验证时没有autotoken，CAS跳转到登录页,登陆成功后分配autotoken并记录autotoken与serviceticken的对应关系
+        // 3.2，CAS验证时有autoToken，查询autotoken与serviceticken的对应关系
+        //  3.2.1，查到对应关系(分别从缓存和数据库中查找：CAS应该提供两种autotoken机制（自动过期的和永久的）)
+        //  3.2.2，没查到CAS跳转到登录页,登陆成功后分配autotoken并记录autotoken与serviceticken的对应关系
+        //4.获取到对应关系后应当入服务提供方session
         if (isNeedSessionCheck(module, executor)){
-            if (StringUtils.isEmpty(this.getSessionContext(executor))) {//无令牌（ST） 可以做到dealType级别
-                //重定向CAS认证
-                //校验令牌合法性1，session 失败
-                //2，重定向CAS认证
-                //保存现场
+            if (this.getSessionContext(executor).size() == 0) {//无令牌（ST） 可以做到dealType级别
                 String requestURL;
                 if (request.getQueryString() != null) {
                     requestURL = request.getRequestURL() + "?" + request.getQueryString();
@@ -414,7 +408,7 @@ public class MainController {
                     this.setCache(requestParam, cachToken);
                     redirectUrlParam = URLEncoder.encode(requestURL + "?ct=" + cachToken, "UTF-8");
                 }
-                response.sendRedirect("redirect:" + authorityConfig.getLoginPage() + "?redirect-url=" + redirectUrlParam);
+                response.sendRedirect(authorityConfig.getLoginPage() + "?redirect-url=" + redirectUrlParam);
                 return this.getResult();
             }
         }
@@ -423,7 +417,6 @@ public class MainController {
         try {
             si= (ServiceInterface)context.getBean(executor);
         } catch (NoSuchBeanDefinitionException e) {
-            System.out.println("NoSuchBeanDefinitionException");
             HashMap<String,Object> errDataSet=new HashMap<String,Object>();
             errDataSet.put("Errmsg","NoSuchBeanDefinitionException");
             this.setResult(RETURN.METHOD_ERROR, errDataSet);
@@ -441,19 +434,9 @@ public class MainController {
             si.getinpool().put(key,urldata.get(key));
         }
         /*-------------------------执行 service bean并返回结果 -----------------------------+*/
-        switch(mt){
-            case "0":
-                this.setResult(si.Initface(), si.getoutpool());//接口代理的方式
-                break;
-            case "1":
-                this.setResult(si.queryface(), si.getoutpool());
-                break;
-            case "2":
-                this.setResult(si.dealface(), si.getoutpool());
-                break;
-        }
 
-        System.out.println(this.getAuthToken());
+        this.setResult(si.dealface(), si.getoutpool());
+//        System.out.println(this.getAuthToken());
 
         /*-------------------------请求最后保存session -----------------------------+*/
         this.setSessionContext((HashMap<String, Object>) si.getContext().get("session"),this.getAuthToken());
@@ -463,6 +446,7 @@ public class MainController {
         handleResponseCookies(response);
         /* +------------------------- 返回跨域设置处理 -------------------------+ */
         handleResponseHeader(response, request.getHeader("referer"));
+        hmPagedata.remove("uploadFile");
         return this.getResult();
     }
 

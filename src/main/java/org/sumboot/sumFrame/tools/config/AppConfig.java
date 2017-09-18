@@ -32,7 +32,7 @@ public class AppConfig {
     public long getSessionTimeout(){return sessionTimeout;}
     public void setSessionTimeout(long sessionTimeout){this.sessionTimeout = sessionTimeout;}
     public String getCacheChanel(){return cacheChanel;}
-    public void setCacheChanel(String requestCacheChanel){this.cacheChanel=requestCacheChanel;}
+    public void setCacheChanel(String cacheChanel){this.cacheChanel=cacheChanel;}
     public long getCacheTimeout(){return cacheTimeout;}
     public void setCacheTimeout(long requestCacheTimeout){this.cacheTimeout=requestCacheTimeout;}
 

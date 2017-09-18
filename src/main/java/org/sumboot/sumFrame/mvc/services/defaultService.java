@@ -17,29 +17,16 @@ import java.util.List;
 public class defaultService extends serviceAbstract{
     @Override
     public ReturnUtil execute() throws Exception {
-        return RETURN.SUCCESS;
-    }
-
-    @Override
-    public ReturnUtil init() throws Exception {
-        this.getoutpool().put("mt",this.getinpool().get("mt"));
-        this.getoutpool().put("authToken",this.getinpool().get("authToken"));
-        this.getoutpool().put("remote-ip",this.getinpool().get("remote-ip"));
-        this.getoutpool().put("url",this.getinpool().get("url"));
-        this.getoutpool().put("referer",this.getinpool().get("referer"));
-        return RETURN.SUCCESS;
-    }
-
-    @Override
-    public ReturnUtil query() throws Exception {
         HashMap<String, Object> Param = this.getinpool();//form
-
-
         String dealType = (String)Param.get("deal-type");
         switch(dealType) {
+            case "getParam":
+                this.getoutpool().put("remote-ip",this.getinpool().get("remote-ip"));
+                this.getoutpool().put("url",this.getinpool().get("url"));
+                this.getoutpool().put("referer",this.getinpool().get("referer"));
+                break;
             case "PAGEtest":
                 MyBatisDAO myBatisDAO=(MyBatisDAO) this.getDaoFactory().get("myBatisDAO");
-
                 PageHelper.startPage(this.getPageNum(), this.getPageSize());//getValidStaffListBycond
                 List<HashMap<String,String>> array = (List<HashMap<String,String>>) myBatisDAO.getCartAttribute();
                 PageInfo page = new PageInfo(array);
@@ -48,7 +35,6 @@ public class defaultService extends serviceAbstract{
             default:
                 break;
         }
-
         return RETURN.SUCCESS;
     }
 }

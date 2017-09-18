@@ -34,13 +34,12 @@ public abstract class serviceAbstract implements ServiceInterface {
     /**********************服务层调用函数**********************************/
     public abstract ReturnUtil execute() throws Exception;
 
-    public abstract ReturnUtil init() throws Exception;
-
-    public abstract ReturnUtil query() throws Exception;
-    @Override
-    public HashMap<String, Object> getinpool() throws Exception {return inpool;}
     public HashMap<String, Object> getSession() {
         HashMap<String, Object> session = (HashMap<String, Object>) this.getContext().get("session");
+        return session;
+    }
+    public HashMap<String, Object> getCache(){
+        HashMap<String, Object> session = (HashMap<String, Object>) this.getContext().get("cache");
         return session;
     }
     public String getAppName(){return appconf.getName();}
@@ -84,7 +83,6 @@ public abstract class serviceAbstract implements ServiceInterface {
     public String getCaptchaKey(){return authconfig.getCaptchaKey();}
 
     /**********************控制层调用函数**********************************/
-
     @Override
     public HashMap<String, Object> getContext() {return context;}
     @Override
@@ -93,18 +91,14 @@ public abstract class serviceAbstract implements ServiceInterface {
     public HashMap<String, Object> getoutpool() throws Exception {return outpool;}
     @Override
     public void setinpool(HashMap inpoll) throws Exception{this.inpool = inpoll;}
-
+    @Override
+    public HashMap<String, Object> getinpool() throws Exception {return inpool;}
     @Transactional(propagation = Propagation.REQUIRED,isolation = Isolation.DEFAULT,timeout=360,rollbackFor=RuntimeException.class)
-    public ReturnUtil dealface() throws Exception {return execute();}
-
-    @Transactional(timeout=180)
-    public ReturnUtil Initface() throws Exception {return init();}
-
-    @Transactional(timeout=180)
-    public ReturnUtil queryface() throws Exception {
+    public ReturnUtil dealface() throws Exception {
         beforeQuery();
-        return query();
+        return execute();
     }
+
     public void initParam() throws Exception {
         HashMap<String, Object> inpool =this.getinpool();
         if (inpool != null) {
