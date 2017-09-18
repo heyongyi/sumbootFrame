@@ -446,6 +446,11 @@ public class MainController {
         handleResponseCookies(response);
         /* +------------------------- 返回跨域设置处理 -------------------------+ */
         handleResponseHeader(response, request.getHeader("referer"));
+        // 文件下载：判断业务逻辑层是否存在downLoadPath，fileName变量
+        if (!StringUtils.isEmpty(si.getoutpool().get("downLoadPath")) && !StringUtils.isEmpty(si.getoutpool().get("fileName"))) {
+            request.getRequestDispatcher("/"+module+"/download?dp="+ si.getoutpool().get("downLoadPath")+"&fn=" + si.getoutpool().get("fileName")).forward(request, response);
+            return this.getResult();
+        }
         hmPagedata.remove("uploadFile");
         return this.getResult();
     }

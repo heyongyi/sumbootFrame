@@ -20,6 +20,10 @@ public class defaultService extends serviceAbstract{
         HashMap<String, Object> Param = this.getinpool();//form
         String dealType = (String)Param.get("deal-type");
         switch(dealType) {
+            case "download":
+                this.getoutpool().put("downLoadPath","D:\\idealspace\\sumbootFrame\\src\\main\\resources\\static\\apidemo.adoc");
+                this.getoutpool().put("fileName","apidemo.adoc");
+                break;
             case "getParam":
                 this.getoutpool().put("remote-ip",this.getinpool().get("remote-ip"));
                 this.getoutpool().put("url",this.getinpool().get("url"));
