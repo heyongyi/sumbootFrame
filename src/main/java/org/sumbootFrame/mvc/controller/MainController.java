@@ -384,6 +384,9 @@ public class MainController {
             this.getHmPagedata().put("fileName",fileName);
         }
         /* +-------------------------session相关处理--------------------------+ */
+        HashMap a = new HashMap<String, Object>();
+        a.put("key","1111111");
+        this.setSessionContext(a,executor);
         // SESSION登陆验证，统一验证的方式有待在考虑
         //1.判断是否需要验证
         //2.判断session中是否有ST（根据autotoken）
@@ -440,21 +443,21 @@ public class MainController {
         /*-------------------------执行 service bean并返回结果 -----------------------------+*/
 
         this.setResult(si.dealface(), si.getoutpool());
-//        System.out.println(this.getAuthToken());
 
         /*-------------------------请求最后保存session -----------------------------+*/
         this.setSessionContext((HashMap<String, Object>) si.getContext().get("session"),this.getAuthToken());
         /*-------------------------请求最后保存cache -----------------------------+*/
         this.setCache((HashMap<String, Object>) si.getContext().get("cache"),this.getAuthToken());
-        /* +------------------------- 返回cookies处理 -------------------------+ */
-        handleResponseCookies(response);
-        /* +------------------------- 返回跨域设置处理 -------------------------+ */
-        handleResponseHeader(response, request.getHeader("referer"));
         // 文件下载：判断业务逻辑层是否存在downLoadPath，fileName变量
         if (!StringUtils.isEmpty(si.getoutpool().get("downLoadPath")) && !StringUtils.isEmpty(si.getoutpool().get("fileName"))) {
             request.getRequestDispatcher("/"+module+"/download?dp="+ si.getoutpool().get("downLoadPath")+"&fn=" + si.getoutpool().get("fileName")).forward(request, response);
             return this.getResult();
         }
+        /* +------------------------- 返回cookies处理 -------------------------+ */
+        handleResponseCookies(response);
+        /* +------------------------- 返回跨域设置处理 -------------------------+ */
+        handleResponseHeader(response, request.getHeader("referer"));
+
         hmPagedata.remove("uploadFile");
         return this.getResult();
     }
