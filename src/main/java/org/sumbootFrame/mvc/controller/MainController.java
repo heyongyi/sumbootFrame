@@ -81,7 +81,7 @@ public class MainController {
         RedisDao redisDao;
         try {
             redisDao = (RedisDao) context.getBean("RedisDao");
-            sessionContext = redisDao.read(appconf.getSessionChannel()+"-"+this.getAuthToken(),sessionField);
+            sessionContext = redisDao.read(appconf.getSessionChannel()+"-"+this.getAuthToken(),""+sessionField);
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
@@ -94,15 +94,17 @@ public class MainController {
 
     public void setSessionContext(HashMap<String, Object> sessionContext,String sessionField) {
         RedisDao redisDao;
-        try {
-            redisDao = (RedisDao) context.getBean(
-                    "RedisDao");
+        if(sessionField != null){
+            try {
+                redisDao = (RedisDao) context.getBean(
+                        "RedisDao");
 //            System.out.println(appconf.getSessionChannel()+"--"+this.getAuthToken()+"--"+sessionContext);
-            redisDao.save(appconf.getSessionChannel()+"-"+this.getAuthToken(), sessionField,
-                    (Object)sessionContext, appconf.getSessionTimeout());
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
+                redisDao.save(appconf.getSessionChannel()+"-"+this.getAuthToken(), sessionField,
+                        (Object)sessionContext, appconf.getSessionTimeout());
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw e;
+            }
         }
     }
     /**
@@ -203,7 +205,7 @@ public class MainController {
         RedisDao redisDao;
         try {
             redisDao = (RedisDao) context.getBean("RedisDao");
-            cachedParam = redisDao.read(appconf.getCacheChanel(), cacheToken);
+            cachedParam = redisDao.read(appconf.getCacheChanel(), ""+cacheToken);
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
@@ -212,13 +214,16 @@ public class MainController {
     }
     public void setCache(HashMap<String, Object> param, String cacheToken) {
         RedisDao redisDao;
-        try {
-            redisDao = (RedisDao) context.getBean("RedisDao");
-            redisDao.save(appconf.getCacheChanel(), cacheToken, (Object)param, appconf.getCacheTimeout());
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
+        if(cacheToken != null){
+            try {
+                redisDao = (RedisDao) context.getBean("RedisDao");
+                redisDao.save(appconf.getCacheChanel(), ""+cacheToken, (Object)param, appconf.getCacheTimeout());
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw e;
+            }
         }
+
     }
     public void conformHmPagedata(HashMap<String, Object> formdata,HashMap<String, Object> jsonbody){
         for(String key:formdata.keySet()){
@@ -264,8 +269,6 @@ public class MainController {
                 }
             }
         }
-
-        cookies.put(appconf.getTokenName(), this.getAuthToken());
         this.setCookies(cookies);
     }
     private void handleResponseCookies(HttpServletResponse response) {//响应中返回cookies
@@ -411,6 +414,7 @@ public class MainController {
                 response.sendRedirect(authorityConfig.getLoginPage() + "?redirect-url=" + redirectUrlParam);
                 return this.getResult();
             }
+
         }
         /*-------------------------获取执行者bean -----------------------------+*/
         ServiceInterface si;
@@ -426,7 +430,7 @@ public class MainController {
         /* +-------------------------处理用户缓存区的cache数据-------------------+ */
         /*-------------------------session和入参打入 service层 -----------------------------+*/
         hmContext.put("session", this.getSessionContext(this.getAuthToken()));
-        hmContext.put("cache", this.getCache(this.getAuthToken()));
+        hmContext.put("cache", this.getCache(this.getAuthToken()));//用户私有缓存区
         si.setContext(hmContext);
         //所有的参数都放入inpool了
         si.setinpool(this.getHmPagedata());
