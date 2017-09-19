@@ -1,10 +1,12 @@
 package org.sumbootFrame.test;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.sumbootFrame.DemoApplicationTests;
+import org.sumbootFrame.data.mao.RedisDao;
 import org.sumbootFrame.mvc.controller.MainController;
 
 import javax.servlet.http.Cookie;
@@ -31,9 +33,8 @@ public class defaultServiceTest extends DemoApplicationTests {
 
     //?mt=1&deal-type=PAGEtest&page=1300&size=20
     @Test
-    public void testQuery() throws Exception {
+    public void testPAGEtest() throws Exception {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("mt", "1");
         params.add("deal-type", "PAGEtest");
         params.add("page", "1300");
         params.add("size", "20");
@@ -47,9 +48,7 @@ public class defaultServiceTest extends DemoApplicationTests {
                         requestParameters(
                                 parameterWithName("deal-type").description("执行逻辑"),
                                 parameterWithName("page").description("分页页码"),
-                                parameterWithName("size").description("分页大小"),
-                                parameterWithName("mt").description("0:init 1:query 2:execute")
-                        ),
+                                parameterWithName("size").description("分页大小")),
                         relaxedResponseFields(
                                 fieldWithPath("header.appName").type("String").description("组件名"),
                                 fieldWithPath("header.stateMsg").type("String").description("返回信息"),
