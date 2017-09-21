@@ -21,7 +21,7 @@ import java.util.Map;
 public abstract class serviceAbstract implements ServiceInterface {
     private HashMap<String,Object> outpool = new HashMap<String,Object>();//输出参数池
     private HashMap<String,Object> inpool = new HashMap<>();//输入参数池
-    private int pageNum = 0;//分页
+    private int pageNum = 1;//分页
     private HashMap<String, Object> context;
 
     @Resource
@@ -102,7 +102,7 @@ public abstract class serviceAbstract implements ServiceInterface {
         HashMap<String, Object> inpool =this.getinpool();
         if (inpool != null) {
             this.setPageNum(inpool.get("page") == null ? this.getPageNum() : Integer.valueOf(inpool.get(
-                    "page").toString()) - 1);// 页面显示页码开始1，后台数据处理页码开始0。
+                    "page").toString()));
             this.setPageSize(inpool.get("size") == null ? this.getPageSize() : Integer.valueOf(inpool.get(
                     "size").toString()));
         }
