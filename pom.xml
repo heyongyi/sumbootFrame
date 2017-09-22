@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.sumbootFrame</groupId>
-	<artifactId>sumFrame</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<artifactId>sum-frame</artifactId>
+	<version>0.0.3</version>
 	<packaging>jar</packaging>
 
-	<name>demo</name>
-	<description>Demo project for Spring Boot</description>
+	<name>sumFrame</name>
+	<description>Frame project for Spring Boot</description>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -112,6 +112,12 @@
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 			<scope>runtime</scope>
+		</dependency>
+		<!-- oracle驱动包 -->
+		<dependency>
+			<groupId>com.oracle</groupId>
+			<artifactId>ojdbc6</artifactId>
+			<version>11.2.0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.pagehelper</groupId>

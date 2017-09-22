@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.sumbootFrame.data.dao.common.MyBatisCommDAO;
+import org.sumbootFrame.data.dao.primary.common.PrimaryCommDAO;
 import org.sumbootFrame.mvc.interfaces.IDao;
 import org.sumbootFrame.mvc.interfaces.ServiceInterface;
 import org.sumbootFrame.tools.ReturnUtil;
@@ -51,18 +51,18 @@ public abstract class serviceAbstract implements ServiceInterface {
     }
 
     public String getSysdate() {
-        MyBatisCommDAO myBatisCommDAO=(MyBatisCommDAO) this.getDaoFactory().get("myBatisCommDAO");
-        return myBatisCommDAO.getSysdate(appconf.getSysdateSql());
+        PrimaryCommDAO primaryCommDAO =(PrimaryCommDAO) this.getDaoFactory().get("myBatisCommDAO");
+        return primaryCommDAO.getSysdate(appconf.getSysdateSql());
     }
 
     public String getSequence(String sequenceName) {
-        MyBatisCommDAO myBatisCommDAO=(MyBatisCommDAO) this.getDaoFactory().get("myBatisCommDAO");
-        return myBatisCommDAO.getSequence(sequenceName);
+        PrimaryCommDAO primaryCommDAO =(PrimaryCommDAO) this.getDaoFactory().get("myBatisCommDAO");
+        return primaryCommDAO.getSequence(sequenceName);
     }
 
     public String getOraSequence(String sequenceName) {
-        MyBatisCommDAO myBatisCommDAO=(MyBatisCommDAO) this.getDaoFactory().get("myBatisCommDAO");
-        return myBatisCommDAO.getOraSequence(sequenceName);
+        PrimaryCommDAO primaryCommDAO =(PrimaryCommDAO) this.getDaoFactory().get("myBatisCommDAO");
+        return primaryCommDAO.getOraSequence(sequenceName);
     }
     public int getPageSize() {
         return appconf.getPageSize();

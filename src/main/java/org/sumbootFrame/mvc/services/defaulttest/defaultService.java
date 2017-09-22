@@ -3,7 +3,8 @@ package org.sumbootFrame.mvc.services.defaulttest;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.springframework.stereotype.Service;
-import org.sumbootFrame.data.dao.common.MyBatisDAO;
+import org.sumbootFrame.data.dao.primary.defaulttest.PrimaryDAO;
+import org.sumbootFrame.data.dao.secondary.defaulttest.SecondaryDAO;
 import org.sumbootFrame.mvc.services.serviceAbstract;
 import org.sumbootFrame.utils.RETURN;
 import org.sumbootFrame.tools.ReturnUtil;
@@ -20,6 +21,8 @@ public class defaultService extends serviceAbstract {
     public ReturnUtil execute() throws Exception {
         HashMap<String, Object> Param = this.getinpool();//form
         String dealType = (String)Param.get("deal-type");
+        PageInfo page;
+        PageHelper.startPage(this.getPageNum(), this.getPageSize());//getValidStaffListBycond
         switch(dealType) {
             case "download":
                 this.getoutpool().put("downLoadPath","D:\\idealspace\\sumbootFrame\\src\\main\\resources\\static\\apidemo.adoc");
@@ -31,11 +34,16 @@ public class defaultService extends serviceAbstract {
                 this.getoutpool().put("referer",this.getinpool().get("referer"));
                 break;
             case "PAGEtest":
-                MyBatisDAO myBatisDAO=(MyBatisDAO) this.getDaoFactory().get("myBatisDAO");
-                PageHelper.startPage(this.getPageNum(), this.getPageSize());//getValidStaffListBycond
-                List<HashMap<String,String>> array = (List<HashMap<String,String>>) myBatisDAO.getCartAttribute();
-                PageInfo page = new PageInfo(array);
+                PrimaryDAO primaryDAO=(PrimaryDAO) this.getDaoFactory().get("primaryDAO");
+                List<HashMap<String,String>> array = (List<HashMap<String,String>>) primaryDAO.getCartAttribute();
+                page = new PageInfo(array);
                 this.getoutpool().put("CartAttr",page);
+                break;
+            case "ddatasource":
+                SecondaryDAO secondaryDAO = (SecondaryDAO)this.getDaoFactory().get("secondaryDAO");
+                List<HashMap<String,String>> list = (List<HashMap<String,String>>) secondaryDAO.getEcsAreainfo();
+                page = new PageInfo(list);
+                this.getoutpool().put("EcsAreainfo",page);
                 break;
             default:
                 break;

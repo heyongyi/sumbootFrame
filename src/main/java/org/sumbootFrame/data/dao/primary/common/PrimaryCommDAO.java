@@ -1,11 +1,11 @@
-package org.sumbootFrame.data.dao.common;
+package org.sumbootFrame.data.dao.primary.common;
 
 import org.apache.ibatis.annotations.Param;
 import org.sumbootFrame.mvc.interfaces.IDao;
 
 import java.util.List;
 
-public interface MyBatisCommDAO extends IDao {
+public interface PrimaryCommDAO extends IDao {
 
 	public String getSysdate(@Param("sysdateSql") String sysdateSql);
 
