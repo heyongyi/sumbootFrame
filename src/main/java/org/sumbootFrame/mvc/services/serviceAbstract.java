@@ -51,17 +51,16 @@ public abstract class serviceAbstract implements ServiceInterface {
     }
 
     public String getSysdate() {
-        PrimaryCommDAO primaryCommDAO =(PrimaryCommDAO) this.getDaoFactory().get("myBatisCommDAO");
+        PrimaryCommDAO primaryCommDAO =(PrimaryCommDAO) this.getDaoFactory().get("primaryCommDAO");
         return primaryCommDAO.getSysdate(appconf.getSysdateSql());
     }
 
     public String getSequence(String sequenceName) {
-        PrimaryCommDAO primaryCommDAO =(PrimaryCommDAO) this.getDaoFactory().get("myBatisCommDAO");
+        PrimaryCommDAO primaryCommDAO =(PrimaryCommDAO) this.getDaoFactory().get("primaryCommDAO");
         return primaryCommDAO.getSequence(sequenceName);
     }
-
     public String getOraSequence(String sequenceName) {
-        PrimaryCommDAO primaryCommDAO =(PrimaryCommDAO) this.getDaoFactory().get("myBatisCommDAO");
+        PrimaryCommDAO primaryCommDAO =(PrimaryCommDAO) this.getDaoFactory().get("primaryCommDAO");
         return primaryCommDAO.getOraSequence(sequenceName);
     }
     public int getPageSize() {
