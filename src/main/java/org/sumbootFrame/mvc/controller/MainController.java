@@ -10,6 +10,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.sumbootFrame.data.mao.RedisDao;
 import org.sumbootFrame.mvc.interfaces.ServiceInterface;
 import org.sumbootFrame.tools.ReturnUtil;
@@ -68,8 +69,8 @@ public class MainController {
         this.getHeader().put("stateCode",retinfo.getStateCode());
         this.getHeader().put("stateMsg",retinfo.getStateMsg());
         this.getHeader().put("success",retinfo.getStateCode().equals("00000"));
-        this.getResult().put("header",this.getHeader());
-        this.getResult().put("dataSet",dataSet);
+        this.getResult().put("dataHead",this.getHeader());
+        this.getResult().put("dataBody",dataSet);
     }
     public HashMap<String, Object> getHmContext(){return hmContext;}
     public HashMap<String, Object> getHmPagedata(){return hmContext;}
@@ -323,9 +324,10 @@ public class MainController {
                                         @RequestParam(value = "st", required = false) String serviceTicket,
                                         @RequestParam(value = "ct", required = false) String cacheToken,
                                         @RequestParam(value = "upload-file", required = false) MultipartFile[] uploadFile,  // 文件上传参数
-                                        @RequestParam(value = "fileName",required = false)String[] fileName)throws Exception {
+                                        @RequestParam(value = "fileName",required = false)String[] fileName,
+                                        RedirectAttributes attr)throws Exception {
 
-        return coredefault(request,response,module,executor,serviceTicket,cacheToken,uploadFile,fileName);
+        return coredefault(request,response,module,executor,serviceTicket,cacheToken,uploadFile,fileName,attr);
     }
     @RequestMapping(value = "/{module}",method = {RequestMethod.POST, RequestMethod.GET})
     public HashMap<String, Object> coredefault
@@ -336,7 +338,8 @@ public class MainController {
              @RequestParam(value = "st", required = false) String serviceTicket,
              @RequestParam(value = "ct", required = false) String cacheToken ,                   // 请求参数缓存令牌
              @RequestParam(value = "upload-file", required = false) MultipartFile[] uploadFile,  // 文件上传参数
-             @RequestParam(value = "fileName",required = false)String[] fileName)throws Exception {
+             @RequestParam(value = "fileName",required = false)String[] fileName,
+             RedirectAttributes attr)throws Exception {
         this.setAuthToken(null);//令牌来自Cookies
 
         /* +---------------------初始化数据暂时存储结构----------------------------+ */
@@ -448,6 +451,17 @@ public class MainController {
         this.setSessionContext((HashMap<String, Object>) si.getContext().get("session"),this.getAuthToken());
         /*-------------------------请求最后保存cache -----------------------------+*/
         this.setCache((HashMap<String, Object>) si.getContext().get("cache"),this.getAuthToken());
+        /*--------------------------------------------------------------------------*/
+        if(!StringUtils.isEmpty(si.getoutpool().get("jsp"))){
+            String redirecttoken = JugUtil.getLongUuid();//随机生成
+            response.sendRedirect("/"+module+"/"+et+"_jsp"+"?redirecttoken="+redirecttoken);
+            HashMap param = new HashMap();
+            param.put("inpool", si.getinpool());
+            param.put("dataBody", si.getoutpool());
+            param.put("dataHead", this.getHeader());
+            this.setCache(param, redirecttoken);
+            return this.getResult();
+        }
         // 文件下载：判断业务逻辑层是否存在downLoadPath，fileName变量
         if (!StringUtils.isEmpty(si.getoutpool().get("downLoadPath")) && !StringUtils.isEmpty(si.getoutpool().get("fileName"))) {
             request.getRequestDispatcher("/"+module+"/download?dp="+ si.getoutpool().get("downLoadPath")+"&fn=" + si.getoutpool().get("fileName")).forward(request, response);

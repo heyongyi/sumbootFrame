@@ -50,16 +50,16 @@ public class defaultServiceTest extends DemoApplicationTests {
                                 parameterWithName("page").description("分页页码"),
                                 parameterWithName("size").description("分页大小")),
                         relaxedResponseFields(
-                                fieldWithPath("header.appName").type("String").description("组件名"),
-                                fieldWithPath("header.stateMsg").type("String").description("返回信息"),
-                                fieldWithPath("header.stateCode").type("String").description("返回状态编码"),
-                                fieldWithPath("header.success").type("String").description("是否成功"),
-                                fieldWithPath("dataSet.CartAttr.pageSize").type("String").description("分页大小"),
-                                fieldWithPath("dataSet.CartAttr.pageNum").type("String").description("分页大小"),
-                                fieldWithPath("dataSet.CartAttr.total").type("String").description("查询数据总数"),
-                                fieldWithPath("dataSet.CartAttr.pages").type("int").description("查询数据总页数"),
-                                fieldWithPath("dataSet.CartAttr.startRow").type("int").description("当前页起始行数"),
-                                fieldWithPath("dataSet.CartAttr.endRow").type("int").description("当前页结束行数"),
-                                fieldWithPath("dataSet.CartAttr.list").type("对象数组").description("页结果集"))));
+                                fieldWithPath("dataHead.appName").type("String").description("组件名"),
+                                fieldWithPath("dataHead.stateMsg").type("String").description("返回信息"),
+                                fieldWithPath("dataHead.stateCode").type("String").description("返回状态编码"),
+                                fieldWithPath("dataHead.success").type("String").description("是否成功"),
+                                fieldWithPath("dataBody.CartAttr.pageSize").type("String").description("分页大小"),
+                                fieldWithPath("dataBody.CartAttr.pageNum").type("String").description("分页大小"),
+                                fieldWithPath("dataBody.CartAttr.total").type("String").description("查询数据总数"),
+                                fieldWithPath("dataBody.CartAttr.pages").type("int").description("查询数据总页数"),
+                                fieldWithPath("dataBody.CartAttr.startRow").type("int").description("当前页起始行数"),
+                                fieldWithPath("dataBody.CartAttr.endRow").type("int").description("当前页结束行数"),
+                                fieldWithPath("dataBody.CartAttr.list").type("对象数组").description("页结果集"))));
     }
 }

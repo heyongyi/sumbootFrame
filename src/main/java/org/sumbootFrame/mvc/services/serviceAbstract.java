@@ -31,6 +31,7 @@ public abstract class serviceAbstract implements ServiceInterface {
     @Autowired
     AuthorityConfig authconfig;
     /**********************服务层调用函数**********************************/
+    public abstract ReturnUtil query() throws Exception;
     public abstract ReturnUtil execute() throws Exception;
 
     public HashMap<String, Object> getSession() {
@@ -91,10 +92,16 @@ public abstract class serviceAbstract implements ServiceInterface {
     public void setinpool(HashMap inpoll) throws Exception{this.inpool = inpoll;}
     @Override
     public HashMap<String, Object> getinpool() throws Exception {return inpool;}
-    @Transactional(propagation = Propagation.REQUIRED,isolation = Isolation.DEFAULT,timeout=360,rollbackFor=RuntimeException.class)
+
     public ReturnUtil dealface() throws Exception {
-        beforeQuery();
-        return execute();
+        String dealType = this.getinpool().get("deal-type").toString();
+        if(dealType.startsWith("select")||dealType.startsWith("query")||dealType.startsWith("get")){
+            return doQuery();
+        }else{
+            return doExecute();
+        }
+
+
     }
 
     public void initParam() throws Exception {
@@ -108,5 +115,14 @@ public abstract class serviceAbstract implements ServiceInterface {
     }
     public void beforeQuery() throws Exception {
         initParam();
+    }
+    @Transactional(propagation=Propagation.NOT_SUPPORTED)
+    public ReturnUtil doQuery() throws Exception {
+        beforeQuery();
+        return query();
+    }
+    @Transactional(propagation = Propagation.REQUIRED,isolation = Isolation.DEFAULT,timeout=360,rollbackFor=RuntimeException.class)
+    public ReturnUtil doExecute() throws Exception {
+        return execute();
     }
 }

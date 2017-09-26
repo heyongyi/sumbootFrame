@@ -18,6 +18,11 @@ import java.util.List;
 @Service
 public class defaultService extends serviceAbstract {
     @Override
+    public ReturnUtil query() throws Exception {
+        return null;
+    }
+
+    @Override
     public ReturnUtil execute() throws Exception {
         HashMap<String, Object> Param = this.getinpool();//form
         String dealType = (String)Param.get("deal-type");
@@ -38,6 +43,7 @@ public class defaultService extends serviceAbstract {
                 List<HashMap<String,String>> array = (List<HashMap<String,String>>) primaryDAO.getCartAttribute();
                 page = new PageInfo(array);
                 this.getoutpool().put("CartAttr",page);
+//                this.getoutpool().put("jsp","index");
                 break;
             case "ddatasource":
                 SecondaryDAO secondaryDAO = (SecondaryDAO)this.getDaoFactory().get("secondaryDAO");
