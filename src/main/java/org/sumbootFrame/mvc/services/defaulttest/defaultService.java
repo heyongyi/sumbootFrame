@@ -19,7 +19,18 @@ import java.util.List;
 public class defaultService extends serviceAbstract {
     @Override
     public ReturnUtil query() throws Exception {
-        return null;
+        HashMap<String, Object> Param = this.getinpool();//form
+        String dealType = (String)Param.get("deal-type");
+        switch(dealType) {
+            case "getEcsAreainfo":
+                SecondaryDAO secondaryDAO = (SecondaryDAO)this.getDaoFactory().get("secondaryDAO");
+                List<HashMap<String,String>> list = (List<HashMap<String,String>>) secondaryDAO.getEcsAreainfo();
+                this.getoutpool().put("EcsAreainfo",list);
+                break;
+            default:
+                break;
+        }
+        return RETURN.SUCCESS;
     }
 
     @Override
