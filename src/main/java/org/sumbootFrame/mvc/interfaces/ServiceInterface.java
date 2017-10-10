@@ -12,7 +12,7 @@ import java.util.HashMap;
 public interface ServiceInterface {
     /*控制层暴露接口*/
     public ReturnUtil dealface() throws Exception;
-
+    public ReturnUtil queryface() throws Exception;
     public HashMap<String,Object> getoutpool() throws Exception;   //对上层提供获取输出，和写入输入就够了
     /****************************inpool包括 form jsonbody urlparam***********************/
     public void setinpool(HashMap inpoll) throws Exception;

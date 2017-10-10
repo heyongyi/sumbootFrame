@@ -325,9 +325,10 @@ public class MainController {
                                         @RequestParam(value = "ct", required = false) String cacheToken,
                                         @RequestParam(value = "upload-file", required = false) MultipartFile[] uploadFile,  // 文件上传参数
                                         @RequestParam(value = "fileName",required = false)String[] fileName,
+                                        @RequestParam(value = "deal-type",required = true)String dealType,
                                         RedirectAttributes attr)throws Exception {
 
-        return coredefault(request,response,module,executor,serviceTicket,cacheToken,uploadFile,fileName,attr);
+        return coredefault(request,response,module,executor,serviceTicket,cacheToken,uploadFile,fileName,dealType,attr);
     }
     @RequestMapping(value = "/{module}",method = {RequestMethod.POST, RequestMethod.GET})
     public HashMap<String, Object> coredefault
@@ -338,7 +339,8 @@ public class MainController {
              @RequestParam(value = "st", required = false) String serviceTicket,
              @RequestParam(value = "ct", required = false) String cacheToken ,                   // 请求参数缓存令牌
              @RequestParam(value = "upload-file", required = false) MultipartFile[] uploadFile,  // 文件上传参数
-             @RequestParam(value = "fileName",required = false)String[] fileName,
+             @RequestParam(value = "file-name",required = false)String[] fileName,
+             @RequestParam(value = "deal-type",required = true)String dealType,
              RedirectAttributes attr)throws Exception {
         this.setAuthToken(null);//令牌来自Cookies
 
@@ -387,9 +389,11 @@ public class MainController {
             this.getHmPagedata().put("fileName",fileName);
         }
         /* +-------------------------session相关处理--------------------------+ */
-        HashMap a = new HashMap<String, Object>();
-        a.put("key","1111111");
-        this.setSessionContext(a,executor);
+        if( Integer.parseInt(appconf.getRunningMode())<3){ //给与全部权限
+            HashMap st = new HashMap<String, Object>();
+            st.put("ST","1111111111111111111111111111111");
+            this.setSessionContext(st,dealType);
+        }
         // SESSION登陆验证，统一验证的方式有待在考虑
         //1.判断是否需要验证
         //2.判断session中是否有ST（根据autotoken）
@@ -400,7 +404,10 @@ public class MainController {
         //  3.2.2，没查到CAS跳转到登录页,登陆成功后分配autotoken并记录autotoken与serviceticken的对应关系
         //4.获取到对应关系后应当入服务提供方session
         if (isNeedSessionCheck(module, executor)){
-            if (this.getSessionContext(executor).size() == 0) {//无令牌（ST） 可以做到dealType级别
+            if(this.getAuthToken() == null){ // 无authtoken ，无身份调用者，每次登陆成功后cas随机分配一个或注册式由cas分配一个
+                //跳转登录界面
+
+            } else if (this.getSessionContext(dealType).size() == 0) {//无令牌（ST） 可以做到dealType级别
                 String requestURL;
                 if (request.getQueryString() != null) {
                     requestURL = request.getRequestURL() + "?" + request.getQueryString();
@@ -420,7 +427,6 @@ public class MainController {
                 response.sendRedirect(authorityConfig.getLoginPage() + "?redirect-url=" + redirectUrlParam);
                 return this.getResult();
             }
-
         }
         /*-------------------------获取执行者bean -----------------------------+*/
         ServiceInterface si;
@@ -444,8 +450,11 @@ public class MainController {
             si.getinpool().put(key,urldata.get(key));
         }
         /*-------------------------执行 service bean并返回结果 -----------------------------+*/
-
-        this.setResult(si.dealface(), si.getoutpool());
+        if(dealType.startsWith("select")||dealType.startsWith("query")||dealType.startsWith("get")){
+            this.setResult(si.queryface(), si.getoutpool());
+        }else{
+            this.setResult(si.dealface(), si.getoutpool());
+        }
 
         /*-------------------------请求最后保存session -----------------------------+*/
         this.setSessionContext((HashMap<String, Object>) si.getContext().get("session"),this.getAuthToken());

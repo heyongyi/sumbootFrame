@@ -93,15 +93,14 @@ public abstract class serviceAbstract implements ServiceInterface {
     @Override
     public HashMap<String, Object> getinpool() throws Exception {return inpool;}
 
+    @Transactional(propagation=Propagation.NOT_SUPPORTED)
+    public ReturnUtil queryface() throws Exception {
+        beforeQuery();
+        return query();
+    }
+    @Transactional(value = "primaryTransactionManager",propagation = Propagation.REQUIRED,isolation = Isolation.DEFAULT,timeout=360,rollbackFor=RuntimeException.class)
     public ReturnUtil dealface() throws Exception {
-        String dealType = this.getinpool().get("deal-type").toString();
-        if(dealType.startsWith("select")||dealType.startsWith("query")||dealType.startsWith("get")){
-            return doQuery();
-        }else{
-            return doExecute();
-        }
-
-
+        return execute();
     }
 
     public void initParam() throws Exception {
@@ -115,14 +114,5 @@ public abstract class serviceAbstract implements ServiceInterface {
     }
     public void beforeQuery() throws Exception {
         initParam();
-    }
-    @Transactional(propagation=Propagation.NOT_SUPPORTED)
-    public ReturnUtil doQuery() throws Exception {
-        beforeQuery();
-        return query();
-    }
-    @Transactional(propagation = Propagation.REQUIRED,isolation = Isolation.DEFAULT,timeout=360,rollbackFor=RuntimeException.class)
-    public ReturnUtil doExecute() throws Exception {
-        return execute();
     }
 }

@@ -24,6 +24,7 @@ public class AppConfig {
     private int pageSize;
     private String exclueModules;
     private String exclueExecuters;
+    private String runningMode;
 
 
     public String getName(){return name ;}
@@ -49,4 +50,7 @@ public class AppConfig {
     public void setExclueModules(String exclueModules){this.exclueModules = exclueModules;}
     public String getExclueExecuters(){return exclueExecuters;}
     public void setExclueExecuters(String exclueExecuters){this.exclueExecuters = exclueExecuters;}
+
+    public String getRunningMode(){return runningMode;}
+    public void setRunningMode(String runningMode){this.runningMode = runningMode;}
 }

@@ -8,7 +8,6 @@ import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-//@MapperScan("org.sumbootFrame.data.dao.**")
 @EnableTransactionManagement
 @SpringBootApplication
 @ServletComponentScan
