@@ -445,9 +445,10 @@ public class MainController {
         hmContext.put("cache", this.getCache(this.getAuthToken()));//用户私有缓存区
         si.setContext(hmContext);
         //所有的参数都放入inpool了
-        si.setinpool(this.getHmPagedata());
-        for(String key:urldata.keySet()){
-            si.getinpool().put(key,urldata.get(key));
+        Iterator urldataIt = urldata.keySet().iterator();
+        while(urldataIt.hasNext()) {
+            String param1 = (String)urldataIt.next();
+            si.getinpool().put(param1, urldata.get(param1));
         }
         /*-------------------------执行 service bean并返回结果 -----------------------------+*/
         if(dealType.startsWith("select")||dealType.startsWith("query")||dealType.startsWith("get")){
@@ -472,17 +473,19 @@ public class MainController {
             return this.getResult();
         }
         // 文件下载：判断业务逻辑层是否存在downLoadPath，fileName变量
-        if (!StringUtils.isEmpty(si.getoutpool().get("downLoadPath")) && !StringUtils.isEmpty(si.getoutpool().get("fileName"))) {
+        else if (!StringUtils.isEmpty(si.getoutpool().get("downLoadPath")) && !StringUtils.isEmpty(si.getoutpool().get("fileName"))) {
             request.getRequestDispatcher("/"+module+"/download?dp="+ si.getoutpool().get("downLoadPath")+"&fn=" + si.getoutpool().get("fileName")).forward(request, response);
             return this.getResult();
-        }
-        /* +------------------------- 返回cookies处理 -------------------------+ */
-        handleResponseCookies(response);
-        /* +------------------------- 返回跨域设置处理 -------------------------+ */
-        handleResponseHeader(response, request.getHeader("referer"));
+        }else{
+            /* +------------------------- 返回cookies处理 -------------------------+ */
+            handleResponseCookies(response);
+            /* +------------------------- 返回跨域设置处理 -------------------------+ */
+            handleResponseHeader(response, request.getHeader("referer"));
 
-        hmPagedata.remove("uploadFile");
-        return this.getResult();
+            hmPagedata.remove("uploadFile");
+            return this.getResult();
+        }
+
     }
 
 }
