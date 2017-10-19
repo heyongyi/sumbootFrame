@@ -162,7 +162,7 @@
             tableData: [],
 
             //请求的URL
-            url:'/sum-mod/queryjob',
+            url:'/${module}/queryjob',
 
             //默认每页数据量
             pagesize: 10,
@@ -200,7 +200,7 @@
 
             //从服务器读取数据
             loadData: function(pageNum, pageSize){
-                this.$http.get('/sum-mod/queryjob?' + 'pageNum=' +  pageNum + '&pageSize=' + pageSize).then(function(res){
+                this.$http.get('/${module}/queryjob?' + 'pageNum=' +  pageNum + '&pageSize=' + pageSize).then(function(res){
                     console.log(res)
                     this.tableData = res.body.JobAndTrigger.list;
                     this.totalCount = res.body.number;
@@ -211,7 +211,7 @@
 
             //单行删除
             handleDelete: function(index, row) {
-                this.$http.post('/sum-mod/deletejob',{"jobClassName":row.job_NAME,"jobGroupName":row.job_GROUP},{emulateJSON: true}).then(function(res){
+                this.$http.post('/${module}/deletejob',{"jobClassName":row.job_NAME,"jobGroupName":row.job_GROUP},{emulateJSON: true}).then(function(res){
                     this.loadData( this.currentPage, this.pagesize);
                 },function(){
                     console.log('failed');
@@ -220,7 +220,7 @@
 
             //暂停任务
             handlePause: function(index, row){
-                this.$http.post('/sum-mod/pausejob',{"jobClassName":row.job_NAME,"jobGroupName":row.job_GROUP},{emulateJSON: true}).then(function(res){
+                this.$http.post('/${module}/pausejob',{"jobClassName":row.job_NAME,"jobGroupName":row.job_GROUP},{emulateJSON: true}).then(function(res){
                     this.loadData( this.currentPage, this.pagesize);
                 },function(){
                     console.log('failed');
@@ -229,7 +229,7 @@
 
             //恢复任务
             handleResume: function(index, row){
-                this.$http.post('/sum-mod/resumejob',{"jobClassName":row.job_NAME,"jobGroupName":row.job_GROUP},{emulateJSON: true}).then(function(res){
+                this.$http.post('/${module}/resumejob',{"jobClassName":row.job_NAME,"jobGroupName":row.job_GROUP},{emulateJSON: true}).then(function(res){
                     this.loadData( this.currentPage, this.pagesize);
                 },function(){
                     console.log('failed');
@@ -248,7 +248,7 @@
 
             //添加
             add: function(){
-                this.$http.post('/sum-mod/addjob',{"jobClassName":this.form.jobName,"jobGroupName":this.form.jobGroup,"cronExpression":this.form.cronExpression},{emulateJSON: true}).then(function(res){
+                this.$http.post('/${module}/addjob',{"jobClassName":this.form.jobName,"jobGroupName":this.form.jobGroup,"cronExpression":this.form.cronExpression},{emulateJSON: true}).then(function(res){
                     this.loadData(this.currentPage, this.pagesize);
                     this.dialogFormVisible = false;
                 },function(){
@@ -267,7 +267,7 @@
             //更新任务
             update: function(){
                 this.$http.post
-                ('/sum-mod/reschedulejob',
+                ('/${module}/reschedulejob',
                         {"jobClassName":this.updateform.jobName,
                             "jobGroupName":this.updateform.jobGroup,
                             "cronExpression":this.updateform.cronExpression
