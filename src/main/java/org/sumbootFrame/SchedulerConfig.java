@@ -4,7 +4,6 @@ import org.quartz.ee.servlet.QuartzInitializerListener;
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.sumbootFrame.tools.PropertyUtils;
@@ -27,11 +26,11 @@ public class SchedulerConfig {
 
     @Bean
     public Properties quartzProperties() throws IOException {
-//        PropertiesFactoryBean propertiesFactoryBean = new PropertiesFactoryBean();
-//        propertiesFactoryBean.setLocations(new ClassPathResource("/static/property/quartz-self.properties"),new ClassPathResource("/quartz.properties"));
-//        return propertiesFactoryBean.getObject();
-        String[] filePath = {"quartz.properties","static/property/quartz-self.properties"};
-        return PropertyUtils.loadProperties(filePath);
+        PropertiesFactoryBean propertiesFactoryBean = new PropertiesFactoryBean();
+        propertiesFactoryBean.setLocations(new ClassPathResource("/quartz.properties"));
+        return propertiesFactoryBean.getObject();
+//        String[] filePath = {"static/property/quartz-self.properties"};
+//        return PropertyUtils.loadProperties(filePath);
     }
 
     @Bean
