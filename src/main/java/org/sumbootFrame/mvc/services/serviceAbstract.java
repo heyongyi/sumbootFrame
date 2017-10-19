@@ -10,6 +10,7 @@ import org.sumbootFrame.mvc.interfaces.ServiceInterface;
 import org.sumbootFrame.tools.ReturnUtil;
 import org.sumbootFrame.tools.config.AppConfig;
 import org.sumbootFrame.tools.config.AuthorityConfig;
+import org.sumbootFrame.tools.exception.MyException;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
@@ -96,11 +97,19 @@ public abstract class serviceAbstract implements ServiceInterface {
     @Transactional(propagation=Propagation.NOT_SUPPORTED)
     public ReturnUtil queryface() throws Exception {
         beforeQuery();
-        return query();
+        ReturnUtil ret = query();
+        if(ret != ReturnUtil.SUCCESS){
+            throw new MyException(ret);
+        }
+        return ret;
     }
     @Transactional(value = "primaryTransactionManager",propagation = Propagation.REQUIRED,isolation = Isolation.DEFAULT,timeout=360,rollbackFor=RuntimeException.class)
     public ReturnUtil dealface() throws Exception {
-        return execute();
+        ReturnUtil ret = execute();
+        if(ret != ReturnUtil.SUCCESS){
+            throw new MyException(ret);
+        }
+        return ret;
     }
 
     public void initParam() throws Exception {
