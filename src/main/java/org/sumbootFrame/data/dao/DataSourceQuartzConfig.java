@@ -22,8 +22,8 @@ import javax.sql.DataSource;
 
 @Configuration
 @PropertySource({
-        "classpath:quartz.properties",
-        "classpath:static/property/quartz-self.properties"
+        "classpath:datasource.properties",
+        "classpath:static/property/datasource-self.properties"
 })
 @EnableTransactionManagement
 @MapperScan(basePackages = "org.sumbootFrame.data.dao.quartz.**", sqlSessionTemplateRef  = "quartzSqlSessionTemplate")
