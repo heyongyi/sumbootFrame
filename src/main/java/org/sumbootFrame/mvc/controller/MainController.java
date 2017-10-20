@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -16,6 +17,7 @@ import org.sumbootFrame.mvc.interfaces.ServiceInterface;
 import org.sumbootFrame.tools.ReturnUtil;
 import org.sumbootFrame.tools.JugUtil;
 import org.sumbootFrame.tools.config.*;
+import org.sumbootFrame.tools.exception.MyException;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -32,6 +34,7 @@ import java.util.*;
 
 @RestController
 public class MainController {
+    protected Logger logger = Logger.getLogger(this.getClass());
     @Autowired
     ApplicationContext context;
     @Autowired
@@ -451,12 +454,19 @@ public class MainController {
             si.getinpool().put(param1, urldata.get(param1));
         }
         /*-------------------------执行 service bean并返回结果 -----------------------------+*/
-        if(dealType.startsWith("select")||dealType.startsWith("query")||dealType.startsWith("get")){
-            this.setResult(si.queryface(), si.getoutpool());
-        }else{
-            this.setResult(si.dealface(), si.getoutpool());
+        try {
+            if(dealType.startsWith("select")||dealType.startsWith("query")||dealType.startsWith("get")){
+                this.setResult(si.queryface(), si.getoutpool());
+            }else{
+                this.setResult(si.dealface(), si.getoutpool());
+            }
+        } catch (MyException e) {
+            this.setResult(e.getRet(), si.getoutpool());
+        } catch (Exception e) {
+            logger.debug("CONTROLLER=>", e);
+            si.getoutpool().put("errorDetail", e.getMessage());
+            this.setResult(ReturnUtil.THROW_ERROR, si.getoutpool());
         }
-
         /*-------------------------请求最后保存session -----------------------------+*/
         this.setSessionContext((HashMap<String, Object>) si.getContext().get("session"),this.getAuthToken());
         /*-------------------------请求最后保存cache -----------------------------+*/

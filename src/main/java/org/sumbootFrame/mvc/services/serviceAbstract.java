@@ -98,7 +98,7 @@ public abstract class serviceAbstract implements ServiceInterface {
     public ReturnUtil queryface() throws Exception {
         beforeQuery();
         ReturnUtil ret = query();
-        if(ret != ReturnUtil.SUCCESS){
+        if(ret.getStateCode() != ReturnUtil.SUCCESS.getStateCode()){
             throw new MyException(ret);
         }
         return ret;
@@ -106,7 +106,7 @@ public abstract class serviceAbstract implements ServiceInterface {
     @Transactional(value = "primaryTransactionManager",propagation = Propagation.REQUIRED,isolation = Isolation.DEFAULT,timeout=360,rollbackFor=RuntimeException.class)
     public ReturnUtil dealface() throws Exception {
         ReturnUtil ret = execute();
-        if(ret != ReturnUtil.SUCCESS){
+        if(ret.getStateCode() != ReturnUtil.SUCCESS.getStateCode()){
             throw new MyException(ret);
         }
         return ret;

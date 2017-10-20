@@ -23,5 +23,5 @@ public final class ReturnUtil {
     public static ReturnUtil METHOD_ERROR = new ReturnUtil("88888", "执行逻辑不存在,请合适请求参数");
     public static ReturnUtil REQUEST_PARAM_FORMAT_ERROR = new ReturnUtil("50001", "request参数格式化失败");
     public static ReturnUtil SUCCESS = new ReturnUtil("00000", "服务执行成功！");
-
+    public static ReturnUtil THROW_ERROR = new ReturnUtil("99999", "服务程序执行异常,请联系管理员");
 }
