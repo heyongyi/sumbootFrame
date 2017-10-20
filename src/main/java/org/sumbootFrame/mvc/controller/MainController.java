@@ -162,6 +162,7 @@ public class MainController {
                 } else {
                     String key = URLDecoder.decode(pair.substring(0, idx), "UTF-8");
                     String value = URLDecoder.decode(pair.substring(idx + 1), "UTF-8");
+                    System.out.println("key="+key+"   value="+value);
                     if (!urlParam.containsKey(key)) {
                         urlParam.put(key, value);
                     }
@@ -379,8 +380,9 @@ public class MainController {
             handleResponseHeader(response, request.getHeader("referer"));
             return this.getResult();
         }
-        /* +-------------------------处理请求中的form数据-------------------+ */
-        handleCommonFormData(request, urldata, formdata);//获取@RequestPart 的 formdata参数
+        /* +-------------------------处理请求中的form数据 排除url中的参数-------------------+ */
+        handleCommonFormData(request, urldata, formdata);//获取@RequestPart的formdata参数  单元测试中的params参数也在此
+        /* +-----------------------formdata和jsonbody 放入HmPagedata---------------------+ */
         if(cacheToken == null){
             conformHmPagedata(formdata,jsonbody);
         }else{
@@ -448,6 +450,8 @@ public class MainController {
         hmContext.put("cache", this.getCache(this.getAuthToken()));//用户私有缓存区
         si.setContext(hmContext);
         //所有的参数都放入inpool了
+        si.setinpool(this.getHmPagedata());
+
         Iterator urldataIt = urldata.keySet().iterator();
         while(urldataIt.hasNext()) {
             String param1 = (String)urldataIt.next();
@@ -467,6 +471,7 @@ public class MainController {
             si.getoutpool().put("errorDetail", e.getMessage());
             this.setResult(ReturnUtil.THROW_ERROR, si.getoutpool());
         }
+
         /*-------------------------请求最后保存session -----------------------------+*/
         this.setSessionContext((HashMap<String, Object>) si.getContext().get("session"),this.getAuthToken());
         /*-------------------------请求最后保存cache -----------------------------+*/
