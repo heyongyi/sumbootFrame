@@ -162,7 +162,6 @@ public class MainController {
                 } else {
                     String key = URLDecoder.decode(pair.substring(0, idx), "UTF-8");
                     String value = URLDecoder.decode(pair.substring(idx + 1), "UTF-8");
-                    System.out.println("key="+key+"   value="+value);
                     if (!urlParam.containsKey(key)) {
                         urlParam.put(key, value);
                     }
@@ -365,6 +364,9 @@ public class MainController {
         handleCookies(request);
         /*-------------------------初始化请求路径通用参------------------------+*/
 //      urldata.put("authToken", this.getAuthToken());
+        urldata.put("module",module);
+        urldata.put("executor",et);
+        urldata.put("deal-type",dealType);
         /* +------------------------- 处理请求路径url参数 ----------------------------+ */
         handleRequestUrl(request, urldata);
         try {
@@ -447,6 +449,7 @@ public class MainController {
         /* +-------------------------处理用户缓存区的cache数据-------------------+ */
         /*-------------------------session和入参打入 service层 -----------------------------+*/
         hmContext.put("session", this.getSessionContext(this.getAuthToken()));
+        hmContext.put("cookies", this.getCookies());
         hmContext.put("cache", this.getCache(this.getAuthToken()));//用户私有缓存区
         si.setContext(hmContext);
         //所有的参数都放入inpool了
@@ -467,8 +470,9 @@ public class MainController {
         } catch (MyException e) {
             this.setResult(e.getRet(), si.getoutpool());
         } catch (Exception e) {
-            logger.debug("CONTROLLER=>", e);
-            si.getoutpool().put("errorDetail", e.getMessage());
+            if( Integer.parseInt(appconf.getRunningMode())<3) {
+                logger.debug("SUM boot=>", e);
+            }
             this.setResult(ReturnUtil.THROW_ERROR, si.getoutpool());
         }
 
@@ -477,6 +481,8 @@ public class MainController {
         /*-------------------------请求最后保存cache -----------------------------+*/
         this.setCache((HashMap<String, Object>) si.getContext().get("cache"),this.getAuthToken());
         /*--------------------------------------------------------------------------*/
+
+
         if(!StringUtils.isEmpty(si.getoutpool().get("jsp"))){
             String redirecttoken = JugUtil.getLongUuid();//随机生成
             response.sendRedirect("/"+module+"/"+et+"_jsp"+"?redirecttoken="+redirecttoken);

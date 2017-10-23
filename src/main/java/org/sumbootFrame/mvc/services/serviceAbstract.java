@@ -1,5 +1,7 @@
 package org.sumbootFrame.mvc.services;
 
+
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
@@ -20,6 +22,7 @@ import java.util.Map;
  * Created by thinkpad on 2017/9/13.
  */
 public abstract class serviceAbstract implements ServiceInterface {
+    protected Logger logger = Logger.getLogger(this.getClass());
     private HashMap<String,Object> outpool = new HashMap<String,Object>();//输出参数池
     private HashMap<String,Object> inpool = new HashMap<>();//输入参数池
     private int pageNum = 1;//分页
@@ -88,28 +91,46 @@ public abstract class serviceAbstract implements ServiceInterface {
     @Override
     public void setContext(HashMap<String, Object> context) {this.context = context;}
     @Override
-    public HashMap<String, Object> getoutpool() throws Exception {return outpool;}
+    public HashMap<String, Object> getoutpool() {return outpool;}
     @Override
-    public void setinpool(HashMap inpoll) throws Exception{this.inpool = inpoll;}
+    public void setinpool(HashMap inpoll){this.inpool = inpoll;}
     @Override
-    public HashMap<String, Object> getinpool() throws Exception {return inpool;}
+    public HashMap<String, Object> getinpool() {return inpool;}
 
     @Transactional(propagation=Propagation.NOT_SUPPORTED)
     public ReturnUtil queryface() throws Exception {
-        beforeQuery();
-        ReturnUtil ret = query();
-        if(ret.getStateCode() != ReturnUtil.SUCCESS.getStateCode()){
-            throw new MyException(ret);
+        try {
+            serviceLog("begin");
+            beforeQuery();
+            ReturnUtil ret = query();
+            if (ret.getStateCode() != ReturnUtil.SUCCESS.getStateCode()) {
+                throw new MyException(ret);
+            }else{
+                serviceLog("end");
+            }
+            return ret;
+        }catch (Exception e){
+            this.getoutpool().put("errorDetail", e);
+            serviceLog("end");
+            throw e;
         }
-        return ret;
     }
     @Transactional(value = "primaryTransactionManager",propagation = Propagation.REQUIRED,isolation = Isolation.DEFAULT,timeout=360,rollbackFor=RuntimeException.class)
     public ReturnUtil dealface() throws Exception {
-        ReturnUtil ret = execute();
-        if(ret.getStateCode() != ReturnUtil.SUCCESS.getStateCode()){
-            throw new MyException(ret);
+        try {
+            serviceLog("begin");
+            ReturnUtil ret = execute();
+            if (ret.getStateCode() != ReturnUtil.SUCCESS.getStateCode()) {
+                throw new MyException(ret);
+            }else{
+                serviceLog("end");
+            }
+            return ret;
+        }catch (Exception e){
+            this.getoutpool().put("errorDetail", e);
+            serviceLog("end");
+            throw e;
         }
-        return ret;
     }
 
     public void initParam() throws Exception {
@@ -123,5 +144,33 @@ public abstract class serviceAbstract implements ServiceInterface {
     }
     public void beforeQuery() throws Exception {
         initParam();
+    }
+    public HashMap<String, Object> getCookies() {
+        HashMap<String, Object> cookies = (HashMap<String, Object>) this.getContext().get("cookies");
+        return cookies;
+    }
+    public String getOperatorStr() {
+        HashMap<String, Object> pageUri = (HashMap<String, Object>) this.getinpool();
+        String operatorStr = pageUri.get("executor") + "=>" + pageUri.get("deal-type");
+        return operatorStr;
+    }
+    private void serviceLog(String type) {
+        if(type.equals("begin")){
+            logger.info("########################[BEGIN:" + this.getOperatorStr() + "]##########################");
+            logger.debug("Cookies:" + this.getCookies());
+            logger.debug("Session:" + this.getSession());
+            logger.debug("InParam:" + this.getinpool());
+            logger.info("+--------------------------------------------------------------------------+");
+        }
+        else if(type.equals("end")){
+            logger.info("+--------------------------------------------------------------------------+");
+            logger.debug("Cookies:" + this.getCookies());
+            logger.debug("Session:" + this.getSession());
+            logger.debug("OutParam:" + this.getoutpool());
+            logger.info("########################[END  :" + this.getOperatorStr() + "]##########################");
+        }
+        else{
+            //to do
+        }
     }
 }
