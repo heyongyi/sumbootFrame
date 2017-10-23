@@ -127,7 +127,11 @@ public abstract class serviceAbstract implements ServiceInterface {
             }
             return ret;
         }catch (Exception e){
-            this.getoutpool().put("errorDetail", e);
+            if( Integer.parseInt(appconf.getRunningMode())<2) {
+                this.getoutpool().put("errorDetail", e);
+            }else{
+                this.getoutpool().put("errorDetail", e.getMessage());
+            }
             serviceLog("end");
             throw e;
         }
