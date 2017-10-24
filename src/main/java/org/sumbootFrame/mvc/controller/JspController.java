@@ -2,6 +2,7 @@ package org.sumbootFrame.mvc.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +23,7 @@ import java.util.Map;
  * Created by thinkpad on 2017/9/25.
  */
 @Controller
+@Scope("request")
 public class JspController {
     @Autowired
     ApplicationContext context;

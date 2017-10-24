@@ -8,6 +8,7 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.web.bind.annotation.*;
 import org.sumbootFrame.mvc.interfaces.BaseJob;
 import org.sumbootFrame.data.dao.quartz.JobAndTriggerMapper;
@@ -21,6 +22,7 @@ import java.util.Map;
  * Created by thinkpad on 2017/10/18.
  */
 @RestController
+@Scope("request")
 public class QuartzController {
     @Autowired
     private JobAndTriggerMapper jobAndTriggerMapper;

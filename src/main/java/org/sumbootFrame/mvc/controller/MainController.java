@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,6 +34,7 @@ import java.util.*;
  */
 
 @RestController
+@Scope("request")
 public class MainController {
     protected Logger logger = Logger.getLogger(this.getClass());
     @Autowired

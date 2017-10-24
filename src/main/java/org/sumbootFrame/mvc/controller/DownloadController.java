@@ -1,6 +1,7 @@
 package org.sumbootFrame.mvc.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +18,7 @@ import java.io.*;
  * Created by thinkpad on 2017/9/18.
  */
 @Controller
+@Scope("request")
 public class DownloadController {
     @Autowired
     ResponceConfig responceconf;
