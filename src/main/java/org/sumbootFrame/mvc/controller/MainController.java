@@ -70,8 +70,8 @@ public class MainController {
     public void setResult(ReturnUtil retinfo, HashMap dataSet) {
         this.getHeader().put("appName",appconf.getName());
         this.getHeader().put("stateCode",retinfo.getStateCode());
-        this.getHeader().put("stateMsg",retinfo.getStateMsg());
-        this.getHeader().put("success",retinfo.getStateCode().equals("00000"));
+        this.getHeader().put("stateMsg",retinfo.getStateDetail().length()>0?retinfo.getStateDetail():retinfo.getStateMsg());
+        this.getHeader().put("success",retinfo.getStateCode().equals(ReturnUtil.SUCCESS.getStateCode()));
         this.getResult().put("dataHead",this.getHeader());
         this.getResult().put("dataBody",dataSet);
     }

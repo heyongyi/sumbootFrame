@@ -10,7 +10,7 @@ public class MyException extends RuntimeException{
     private ReturnUtil ret;
 
     public MyException(ReturnUtil ret) {
-        super(ret.getStateCode()+":"+ret.getStateMsg());
+        super(ret.getStateCode()+":"+(ret.getStateDetail().length()>0?ret.getStateDetail():ret.getStateMsg()));
         this.ret = ret;
     }
 
