@@ -4,10 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <title>QuartzDemo</title>
-    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-default/index.css">
-    <script src="https://unpkg.com/vue/dist/vue.js"></script>
-    <script src="http://cdn.bootcss.com/vue-resource/1.3.4/vue-resource.js"></script>
-    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <link rel="stylesheet" href="/quartz/css/index.css">
+    <script src="/quartz/js/vue.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/quartz/js/vue-resource.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/quartz/js/index.js" type="text/javascript" charset="utf-8"></script>
 
     <style>
         #top {
