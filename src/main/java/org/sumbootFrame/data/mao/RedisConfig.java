@@ -40,6 +40,7 @@ public class RedisConfig extends CachingConfigurerSupport {
         //所以在没有自己定义key生成策略的时候，以下这个代码建议不要这么写，可以不配置或者自己实现ObjectRedisSerializer
         //或者JdkSerializationRedisSerializer序列化方式;
         StringRedisSerializer keySerializer = new StringRedisSerializer();//Long类型不可以会出现异常信息;
+        redisTemplate.setEnableTransactionSupport(true);
         redisTemplate.setKeySerializer(keySerializer);
         redisTemplate.setHashKeySerializer(keySerializer);
         JdkSerializationRedisSerializer valueSerializer = new JdkSerializationRedisSerializer();//Long类型不可以会出现异常信息;
