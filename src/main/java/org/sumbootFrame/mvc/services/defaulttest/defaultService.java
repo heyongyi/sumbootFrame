@@ -44,6 +44,7 @@ public class defaultService extends serviceAbstract {
         PageHelper.startPage(this.getPageNum(), this.getPageSize());//getValidStaffListBycond
         switch(dealType) {
             case "download":
+
                 this.getoutpool().put("downLoadPath","D:\\idealspace\\sumbootFrame\\src\\main\\resources\\static\\apidemo.adoc");
                 this.getoutpool().put("fileName","apidemo.adoc");
                 break;
@@ -57,7 +58,14 @@ public class defaultService extends serviceAbstract {
                 List<HashMap<String,String>> array = (List<HashMap<String,String>>) primaryDAO.getCartAttribute();
                 page = new PageInfo(array);
                 this.getoutpool().put("CartAttr",page);
-//                this.getoutpool().put("jsp","index");
+                this.getoutpool().put("jsp","index");
+                break;
+            case "PAGEtestxml":
+                PrimaryDAO primaryDAO1=(PrimaryDAO) this.getDaoFactory().get("primaryDAO");
+                List<HashMap<String,String>> array1 = (List<HashMap<String,String>>) primaryDAO1.getCartAttribute();
+                page = new PageInfo(array1);
+                this.getoutpool().put("CartAttr",page);
+                this.getoutpool().put("xml","true");
                 break;
             case "ddatasource":
                 SecondaryDAO secondaryDAO = (SecondaryDAO)this.getDaoFactory().get("secondaryDAO");

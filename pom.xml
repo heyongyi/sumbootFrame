@@ -142,6 +142,10 @@
             <artifactId>java-uuid-generator</artifactId>
             <version>${java-uuid-generator.version}</version>
         </dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-xml</artifactId>
+		</dependency>
 		<!-- Apache Commons IO -->
 		<dependency>
 			<groupId>commons-io</groupId>

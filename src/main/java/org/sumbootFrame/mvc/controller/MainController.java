@@ -9,6 +9,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -239,9 +240,20 @@ public class MainController {
             this.getHmPagedata().put(key,jsonbody.get(key));
         }
     }
-    private boolean isNeedSessionCheck(String module, String executor) {
+    private boolean isNeedSessionLimitCheck(String module, String executor) {
         String[] exclueModules = appconf.getExclueModules().split(",");
         String[] exclueExecuters = appconf.getExclueExecuters().split(",");
+        if (Arrays.asList(exclueModules).contains(module)) {
+            return false;
+        }
+        if (Arrays.asList(exclueExecuters).contains(executor)) {
+            return false;
+        }
+        return true;
+    }
+    private boolean isNeedSessionLoginCheck(String module, String executor) {
+        String[] exclueModules = appconf.getExclueLoginModules().split(",");
+        String[] exclueExecuters = appconf.getExclueLoginExecuters().split(",");
         if (Arrays.asList(exclueModules).contains(module)) {
             return false;
         }
@@ -321,7 +333,7 @@ public class MainController {
             }
         }
     }
-    @RequestMapping(value = "/{module}/{executor}",method = {RequestMethod.POST, RequestMethod.GET})
+    @RequestMapping(value = "/{module}/{executor}",method = {RequestMethod.POST, RequestMethod.GET},produces = {"application/xml", "application/json"})
     public HashMap<String, Object> core(HttpServletRequest request,
                                         HttpServletResponse response,
                                         @PathVariable String module,
@@ -335,7 +347,7 @@ public class MainController {
 
         return coredefault(request,response,module,executor,serviceTicket,cacheToken,uploadFile,fileName,dealType,attr);
     }
-    @RequestMapping(value = "/{module}",method = {RequestMethod.POST, RequestMethod.GET})
+    @RequestMapping(value = "/{module}",method = {RequestMethod.POST, RequestMethod.GET},produces = {"application/xml", "application/json"})
     public HashMap<String, Object> coredefault
             (HttpServletRequest request,
              HttpServletResponse response,
@@ -412,31 +424,31 @@ public class MainController {
         //  3.2.1，查到对应关系(分别从缓存和数据库中查找：CAS应该提供两种autotoken机制（自动过期的和永久的）)
         //  3.2.2，没查到CAS跳转到登录页,登陆成功后分配autotoken并记录autotoken与serviceticken的对应关系
         //4.获取到对应关系后应当入服务提供方session
-        if (isNeedSessionCheck(module, executor)){
-            if(this.getAuthToken() == null){ // 无authtoken ，无身份调用者，每次登陆成功后cas随机分配一个或注册式由cas分配一个
-                //跳转登录界面
-
-            } else if (this.getSessionContext(dealType).size() == 0) {//无令牌（ST） 可以做到dealType级别
-                String requestURL;
-                if (request.getQueryString() != null) {
-                    requestURL = request.getRequestURL() + "?" + request.getQueryString();
-                } else {
-                    requestURL = request.getRequestURL().toString();
-                }
-                String redirectUrlParam = null;
-                if (request.getMethod().equals("GET")) {
-                    redirectUrlParam = URLEncoder.encode(requestURL, "UTF-8");
-                } else if (request.getMethod().equals("POST")) {
-                    HashMap requestParam = new HashMap();
-                    requestParam.put("PageData", this.getHmPagedata());
-                    String cachToken = JugUtil.getLongUuid();//随机生成
-                    this.setCache(requestParam, cachToken);
-                    redirectUrlParam = URLEncoder.encode(requestURL + "?ct=" + cachToken, "UTF-8");
-                }
-                response.sendRedirect(authorityConfig.getLoginPage() + "?redirect-url=" + redirectUrlParam);
-                return this.getResult();
+        if (isNeedSessionLoginCheck(module, executor) && this.getAuthToken() == null){
+            String requestURL;
+            if (request.getQueryString() != null) {
+                requestURL = request.getRequestURL() + "?" + request.getQueryString();
+            } else {
+                requestURL = request.getRequestURL().toString();
             }
+            String redirectUrlParam = null;
+            if (request.getMethod().equals("GET")) {
+                redirectUrlParam = URLEncoder.encode(requestURL, "UTF-8");
+            } else if (request.getMethod().equals("POST")) {
+                HashMap requestParam = new HashMap();
+                requestParam.put("PageData", this.getHmPagedata());
+                String cachToken = JugUtil.getLongUuid();//随机生成
+                this.setCache(requestParam, cachToken);
+                redirectUrlParam = URLEncoder.encode(requestURL + "?ct=" + cachToken, "UTF-8");
+            }
+            response.sendRedirect(authorityConfig.getLoginPage() + "?redirect-url=" + redirectUrlParam);
+            return this.getResult();
+        }else if(isNeedSessionLimitCheck(module, executor) && this.getSessionContext(dealType).size() == 0){
+            HashMap st = new HashMap<String, Object>();
+            st.put("ST","1111111111111111111111111111111");
+            this.setSessionContext(st,dealType);
         }
+
         /*-------------------------获取执行者bean -----------------------------+*/
         ServiceInterface si;
         try {
@@ -499,7 +511,8 @@ public class MainController {
         else if (!StringUtils.isEmpty(si.getoutpool().get("downLoadPath")) && !StringUtils.isEmpty(si.getoutpool().get("fileName"))) {
             request.getRequestDispatcher("/"+module+"/download?dp="+ si.getoutpool().get("downLoadPath")+"&fn=" + si.getoutpool().get("fileName")).forward(request, response);
             return this.getResult();
-        }else{
+        }
+        else{
             /* +------------------------- 返回cookies处理 -------------------------+ */
             handleResponseCookies(response);
             /* +------------------------- 返回跨域设置处理 -------------------------+ */
