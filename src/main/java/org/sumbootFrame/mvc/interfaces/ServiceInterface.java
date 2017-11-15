@@ -5,6 +5,7 @@ package org.sumbootFrame.mvc.interfaces;
 import org.sumbootFrame.tools.ReturnUtil;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by thinkpad on 2016/12/12.
@@ -21,4 +22,5 @@ public interface ServiceInterface {
     public void setContext(HashMap<String, Object> context);
     public HashMap<String, Object> getContext();
 
+    public Map<String, IDao> getDaoFactory() ;
 }

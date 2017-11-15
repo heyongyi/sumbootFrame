@@ -50,6 +50,7 @@ public abstract class serviceAbstract implements ServiceInterface {
     public String getSysdateSql() {
         return appconf.getSysdateSql();
     }
+    @Override
     public Map<String, IDao> getDaoFactory() {return daoFactory;}
     public void setDaoFactory(Map<String, IDao> daoFactory) {
         this.daoFactory = daoFactory;
