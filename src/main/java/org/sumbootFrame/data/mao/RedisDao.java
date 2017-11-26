@@ -7,6 +7,7 @@ import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.sumbootFrame.mvc.interfaces.IDao;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -17,7 +18,7 @@ import java.util.concurrent.TimeUnit;
  * Created by thinkpad on 2017/9/12.
  */
 @Service("RedisDao")
-public class RedisDao {
+public class RedisDao implements IDao{
     @Autowired
     private RedisTemplate<Serializable, Serializable> redisTemplate;
 

@@ -19,7 +19,7 @@ import java.io.Serializable;
  */
 @Configuration
 @EnableCaching//启用缓存，这个注解很重要；
-public class RedisConfig extends CachingConfigurerSupport {
+public class RedisConfigure extends CachingConfigurerSupport {
     /**
      * 缓存管理器.
      * @param redisTemplate
