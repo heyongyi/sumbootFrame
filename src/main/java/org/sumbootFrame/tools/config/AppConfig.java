@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 
 @ConfigurationProperties(prefix = "sum.app")
 @PropertySource({
-        "classpath:app.properties",
-        "classpath:static/property/app-self.properties"
+        "classpath:properties/sum.properties",
+        "classpath:self-properties/sum-self.properties"
 })
 @Component
 public class AppConfig {

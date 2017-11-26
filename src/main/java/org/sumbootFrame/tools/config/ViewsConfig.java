@@ -13,8 +13,8 @@ import java.util.Map;
 //@Configuration
 @ConfigurationProperties(prefix = "sum.views")
 @PropertySource({
-        "classpath:views.properties",
-        "classpath:static/property/views-self.properties"
+        "classpath:properties/sum.properties",
+        "classpath:self-properties/sum-self.properties"
 })
 @Component
 public class ViewsConfig {

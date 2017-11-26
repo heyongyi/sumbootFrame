@@ -31,7 +31,7 @@ public class JspController {
     AppConfig appconf;
     @Autowired
     ResponceConfig responceconf;
-    public HashMap<String, Object> getCache(String cacheToken) {
+    public HashMap<String, Object> getRedirectCache(String cacheToken) {
         HashMap<String, Object> cachedParam;
         RedisDao redisDao;
         try {
@@ -83,9 +83,9 @@ public class JspController {
          /* +------------------------- 返回跨域设置处理 -------------------------+ */
         handleResponseHeader(response, request.getHeader("referer"));
         if(redirecttoken != null){
-            map.put("inpool",this.getCache(redirecttoken).get("inpool"));
-            map.put("dataBody",this.getCache(redirecttoken).get("dataBody"));
-            map.put("dataHead",this.getCache(redirecttoken).get("dataHead"));
+            map.put("inpool",this.getRedirectCache(redirecttoken).get("inpool"));
+            map.put("dataBody",this.getRedirectCache(redirecttoken).get("dataBody"));
+            map.put("dataHead",this.getRedirectCache(redirecttoken).get("dataHead"));
             return new ModelAndView(((HashMap)(map.get("dataBody"))).get("jsp").toString()) ;
         }else{
             map.put("module",module);

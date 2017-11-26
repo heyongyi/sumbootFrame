@@ -13,21 +13,6 @@
         ${sql}
     </select>
 
-    <!-- 获得结束时间  added by wanghao -->
-    <select id="getEndDate" resultType="String">
-        SELECT
-        DATE_FORMAT(
-        DATE_ADD(SYSDATE(), INTERVAL 80 YEAR),
-        '%Y-%m-%d %H:%i:%S'
-        )
-    </select>
-	<select id="getSequence" parameterType="String" resultType="String">
-		SELECT nextval(#{seqName});
-	</select>
-
-	<select id="getOraSequence" parameterType="String" resultType="String">
-		select #{seqName}.nextval from dual
-	</select>
 
 	<!-- select CONCAT("<if test=""",column_name," != null""> AND ",column_name," 
 		= #{",column_name,"} </if>") from information_schema.columns where table_name='t_m_menus'; -->

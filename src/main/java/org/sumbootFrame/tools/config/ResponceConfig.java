@@ -11,8 +11,8 @@ import javax.validation.constraints.NotNull;
  */
 @ConfigurationProperties(prefix = "sum.response")
 @PropertySource({
-        "classpath:response.properties",
-        "classpath:static/property/response-self.properties"
+        "classpath:properties/sum.properties",
+        "classpath:self-properties/sum-self.properties"
 })
 @Component
 public class ResponceConfig {

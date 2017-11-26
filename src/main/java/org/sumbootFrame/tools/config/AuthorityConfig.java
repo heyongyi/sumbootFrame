@@ -11,8 +11,8 @@ import java.util.Map;
  */
 @ConfigurationProperties(prefix = "sum.auth")
 @PropertySource({
-        "classpath:authority.properties",
-        "classpath:static/property/authority-self.properties"
+        "classpath:properties/sum.properties",
+        "classpath:self-properties/sum-self.properties"
 })
 @Component
 public class AuthorityConfig {

@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
  */
 @ConfigurationProperties(prefix = "sum.cookie")
 @PropertySource({
-        "classpath:cookie.properties",
-        "classpath:static/property/cookie-self.properties"
+        "classpath:properties/sum.properties",
+        "classpath:self-properties/sum-self.properties"
 })
 @Component
 public class CookieConfig {

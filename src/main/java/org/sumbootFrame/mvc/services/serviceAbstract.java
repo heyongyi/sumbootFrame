@@ -61,14 +61,6 @@ public abstract class serviceAbstract implements ServiceInterface {
         return primaryCommDAO.getSysdate(appconf.getSysdateSql());
     }
 
-    public String getSequence(String sequenceName) {
-        PrimaryCommDAO primaryCommDAO =(PrimaryCommDAO) this.getDaoFactory().get("primaryCommDAO");
-        return primaryCommDAO.getSequence(sequenceName);
-    }
-    public String getOraSequence(String sequenceName) {
-        PrimaryCommDAO primaryCommDAO =(PrimaryCommDAO) this.getDaoFactory().get("primaryCommDAO");
-        return primaryCommDAO.getOraSequence(sequenceName);
-    }
     public int getPageSize() {
         return appconf.getPageSize();
     }
@@ -85,6 +77,9 @@ public abstract class serviceAbstract implements ServiceInterface {
     }
 
     public String getCaptchaKey(){return authconfig.getCaptchaKey();}
+    public String getLoginPage(){return authconfig.getLoginPage();}
+    public String getSessionObjName(){return authconfig.getSessionObjName();}
+    public HashMap<String,Object> getSessionObj(){return ((HashMap<String,Object>)this.getSession().get(getSessionObjName()));}
 
     /**********************控制层调用函数**********************************/
     @Override
@@ -111,7 +106,11 @@ public abstract class serviceAbstract implements ServiceInterface {
             }
             return ret;
         }catch (Exception e){
-            this.getoutpool().put("errorDetail", e);
+            if( Integer.parseInt(appconf.getRunningMode())<2) {
+                this.getoutpool().put("errorDetail", e);
+            }else{
+                this.getoutpool().put("errorDetail", e.getMessage());
+            }
             serviceLog("end");
             throw e;
         }
@@ -165,10 +164,10 @@ public abstract class serviceAbstract implements ServiceInterface {
             logger.debug("Cookies:" + this.getCookies());
             logger.debug("Session:" + this.getSession());
             logger.debug("InParam:" + this.getinpool());
-            logger.info("+--------------------------------------------------------------------------+");
+            logger.debug("+--------------------------------------------------------------------------+");
         }
         else if(type.equals("end")){
-            logger.info("+--------------------------------------------------------------------------+");
+            logger.debug("+--------------------------------------------------------------------------+");
             logger.debug("Cookies:" + this.getCookies());
             logger.debug("Session:" + this.getSession());
             logger.debug("OutParam:" + this.getoutpool());

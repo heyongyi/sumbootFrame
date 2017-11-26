@@ -79,7 +79,7 @@ public class MainController {
         this.getResult().put("dataBody",dataSet);
     }
     public HashMap<String, Object> getHmContext(){return hmContext;}
-    public HashMap<String, Object> getHmPagedata(){return hmContext;}
+    public HashMap<String, Object> getHmPagedata(){return hmPagedata;}
     public void setHmContext(HashMap<String, Object> hmContext){this.hmContext=hmContext;}
     public void setHmPagedata(HashMap<String, Object> hmPagedata){this.hmPagedata = hmPagedata;}
 
@@ -105,7 +105,6 @@ public class MainController {
             try {
                 redisDao = (RedisDao) context.getBean(
                         "RedisDao");
-//            System.out.println(appconf.getSessionChannel()+"--"+this.getAuthToken()+"--"+sessionContext);
                 redisDao.save(appconf.getSessionChannel()+"-"+this.getAuthToken(), sessionField,
                         (Object)sessionContext, appconf.getSessionTimeout());
             } catch (Exception e) {
@@ -207,7 +206,7 @@ public class MainController {
             }
         }
     }
-    public HashMap<String, Object> getCache(String cacheToken) {
+    public HashMap<String, Object> getRedirectCache(String cacheToken) {
         HashMap<String, Object> cachedParam;
         RedisDao redisDao;
         try {
@@ -219,7 +218,7 @@ public class MainController {
         }
         return cachedParam;
     }
-    public void setCache(HashMap<String, Object> param, String cacheToken) {
+    public void setRedirectCache(HashMap<String, Object> param, String cacheToken) {
         RedisDao redisDao;
         if(cacheToken != null){
             try {
@@ -230,7 +229,6 @@ public class MainController {
                 throw e;
             }
         }
-
     }
     public void conformHmPagedata(HashMap<String, Object> formdata,HashMap<String, Object> jsonbody){
         for(String key:formdata.keySet()){
@@ -266,11 +264,10 @@ public class MainController {
         String executor;
         if (StringUtils.isEmpty(et)) {
             executor = (String) viewsconf.getUrlRouteDefault().get(module);
-        } else {
+        } else if(!StringUtils.isEmpty(et) && viewsconf.getUrlRouteDefault().containsKey(module)){
             executor = (String) viewsconf.getUrlRoute().get(et);
-        }
-        if (executor == null) {
-            executor = et;
+        }else{
+            executor = null;
         }
         return executor;
     }
@@ -339,13 +336,12 @@ public class MainController {
                                         @PathVariable String module,
                                         @PathVariable(value = "executor") String executor,
                                         @RequestParam(value = "st", required = false) String serviceTicket,
-                                        @RequestParam(value = "ct", required = false) String cacheToken,
+                                        @RequestParam(value = "ct", required = false) String redirectToken,
                                         @RequestParam(value = "upload-file", required = false) MultipartFile[] uploadFile,  // 文件上传参数
                                         @RequestParam(value = "fileName",required = false)String[] fileName,
-                                        @RequestParam(value = "deal-type",required = true)String dealType,
-                                        RedirectAttributes attr)throws Exception {
+                                        @RequestParam(value = "deal-type",required = true)String dealType)throws Exception {
 
-        return coredefault(request,response,module,executor,serviceTicket,cacheToken,uploadFile,fileName,dealType,attr);
+        return coredefault(request,response,module,executor,serviceTicket,redirectToken,uploadFile,fileName,dealType);
     }
     @RequestMapping(value = "/{module}",method = {RequestMethod.POST, RequestMethod.GET},produces = {"application/xml", "application/json"})
     public HashMap<String, Object> coredefault
@@ -354,17 +350,16 @@ public class MainController {
              @PathVariable String module,
              @RequestParam(value = "et", required = false) String et,
              @RequestParam(value = "st", required = false) String serviceTicket,
-             @RequestParam(value = "ct", required = false) String cacheToken ,                   // 请求参数缓存令牌
+             @RequestParam(value = "ct", required = false) String redirectToken ,                   // 请求参数缓存令牌
              @RequestParam(value = "upload-file", required = false) MultipartFile[] uploadFile,  // 文件上传参数
              @RequestParam(value = "file-name",required = false)String[] fileName,
-             @RequestParam(value = "deal-type",required = true)String dealType,
-             RedirectAttributes attr)throws Exception {
+             @RequestParam(value = "deal-type",required = true)String dealType)throws Exception {
         this.setAuthToken(null);//令牌来自Cookies
 
         /* +---------------------初始化数据暂时存储结构----------------------------+ */
-        HashMap<String, Object> urldata = new HashMap<>();
-        HashMap<String, Object> formdata = new HashMap<>();
-        HashMap<String, Object> jsonbody = new HashMap<>();//参数的三个来源
+        HashMap<String, Object> urldata = new HashMap<String, Object>();
+        HashMap<String, Object> formdata = new HashMap<String, Object>();
+        HashMap<String, Object> jsonbody = new HashMap<String, Object>();//参数的三个来源
         /* +--------------------------请求路径透明化处理--------------------------+ */
         String executor = getExecutor(module, et);
         if (StringUtils.isEmpty(executor)) {
@@ -399,22 +394,18 @@ public class MainController {
         /* +-------------------------处理请求中的form数据 排除url中的参数-------------------+ */
         handleCommonFormData(request, urldata, formdata);//获取@RequestPart的formdata参数  单元测试中的params参数也在此
         /* +-----------------------formdata和jsonbody 放入HmPagedata---------------------+ */
-        if(cacheToken == null){
+        if(redirectToken == null){
             conformHmPagedata(formdata,jsonbody);
         }else{
-            this.setHmPagedata(this.getCache(cacheToken));
+            this.setHmPagedata(this.getRedirectCache(redirectToken));
         }
         /*-------------------------上传文件参数传递给业务层--------------------+*/
         if (uploadFile != null) {
             this.getHmPagedata().put("uploadFile", uploadFile);
             this.getHmPagedata().put("fileName",fileName);
         }
-        /* +-------------------------session相关处理--------------------------+ */
-        if( Integer.parseInt(appconf.getRunningMode())<3){ //给与全部权限
-            HashMap st = new HashMap<String, Object>();
-            st.put("ST","1111111111111111111111111111111");
-            this.setSessionContext(st,dealType);
-        }
+
+
         // SESSION登陆验证，统一验证的方式有待在考虑
         //1.判断是否需要验证
         //2.判断session中是否有ST（根据autotoken）
@@ -437,16 +428,27 @@ public class MainController {
             } else if (request.getMethod().equals("POST")) {
                 HashMap requestParam = new HashMap();
                 requestParam.put("PageData", this.getHmPagedata());
-                String cachToken = JugUtil.getLongUuid();//随机生成
-                this.setCache(requestParam, cachToken);
-                redirectUrlParam = URLEncoder.encode(requestURL + "?ct=" + cachToken, "UTF-8");
+                String reToken = JugUtil.getLongUuid();//随机生成
+                this.setRedirectCache(requestParam, reToken);
+                redirectUrlParam = URLEncoder.encode(requestURL + "?ct=" + reToken, "UTF-8");
             }
             response.sendRedirect(authorityConfig.getLoginPage() + "?redirect-url=" + redirectUrlParam);
             return this.getResult();
         }else if(isNeedSessionLimitCheck(module, executor) && this.getSessionContext(dealType).size() == 0){
-            HashMap st = new HashMap<String, Object>();
-            st.put("ST","1111111111111111111111111111111");
-            this.setSessionContext(st,dealType);
+
+            /* +-------------------------session相关处理--------------------------+ */
+            if( Integer.parseInt(appconf.getRunningMode())<3){ //给与全部权限
+                HashMap st = new HashMap<String, Object>();
+                st.put("ST","1111111111111111111111111111111");
+                this.setSessionContext(st,dealType);
+            }else {
+                /* 没有权限 */
+                HashMap<String,Object> errDataSet=new HashMap<String,Object>();
+                errDataSet.put("Errmsg","服务调用者没有此操作权限，操作功能："+module+"=>"+executor+"=>"+dealType);
+                this.setResult(ReturnUtil.REQUEST_METHOD_NO_AUTH,errDataSet);
+                handleResponseHeader(response, request.getHeader("referer"));
+                return this.getResult();
+            }
         }
 
         /*-------------------------获取执行者bean -----------------------------+*/
@@ -464,7 +466,6 @@ public class MainController {
         /*-------------------------session和入参打入 service层 -----------------------------+*/
         hmContext.put("session", this.getSessionContext(this.getAuthToken()));
         hmContext.put("cookies", this.getCookies());
-        hmContext.put("cache", this.getCache(this.getAuthToken()));//用户私有缓存区
         si.setContext(hmContext);
         //所有的参数都放入inpool了
         si.setinpool(this.getHmPagedata());
@@ -484,16 +485,11 @@ public class MainController {
         } catch (MyException e) {
             this.setResult(e.getRet(), si.getoutpool());
         } catch (Exception e) {
-            if( Integer.parseInt(appconf.getRunningMode())<3) {
-                logger.debug("SUM boot=>", e);
-            }
             this.setResult(ReturnUtil.THROW_ERROR, si.getoutpool());
         }
 
         /*-------------------------请求最后保存session -----------------------------+*/
         this.setSessionContext((HashMap<String, Object>) si.getContext().get("session"),this.getAuthToken());
-        /*-------------------------请求最后保存cache -----------------------------+*/
-        this.setCache((HashMap<String, Object>) si.getContext().get("cache"),this.getAuthToken());
         /*--------------------------------------------------------------------------*/
 
 
@@ -504,7 +500,7 @@ public class MainController {
             param.put("inpool", si.getinpool());
             param.put("dataBody", si.getoutpool());
             param.put("dataHead", this.getHeader());
-            this.setCache(param, redirecttoken);
+            this.setRedirectCache(param, redirecttoken);
             return this.getResult();
         }
         // 文件下载：判断业务逻辑层是否存在downLoadPath，fileName变量

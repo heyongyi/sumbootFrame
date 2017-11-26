@@ -29,8 +29,6 @@ public class SchedulerConfig {
         PropertiesFactoryBean propertiesFactoryBean = new PropertiesFactoryBean();
         propertiesFactoryBean.setLocations(new ClassPathResource("/quartz.properties"));
         return propertiesFactoryBean.getObject();
-//        String[] filePath = {"static/property/quartz-self.properties"};
-//        return PropertyUtils.loadProperties(filePath);
     }
 
     @Bean

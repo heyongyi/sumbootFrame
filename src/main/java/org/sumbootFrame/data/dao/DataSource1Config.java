@@ -9,7 +9,6 @@ import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -24,8 +23,8 @@ import javax.sql.DataSource;
 
 @Configuration
 @PropertySource({
-        "classpath:datasource.properties",
-        "classpath:static/property/datasource-self.properties"
+        "classpath:properties/datasource.properties",
+        "classpath:self-properties/datasource-self.properties"
 })
 @EnableTransactionManagement
 @MapperScan(basePackages = "org.sumbootFrame.data.dao.primary.**", sqlSessionTemplateRef  = "primarySqlSessionTemplate")
