@@ -52,12 +52,16 @@ public class MainController {
     AuthorityConfig authorityConfig;
 
     private String authToken;
+    private String serviceTicket;
     private HashMap<String, Object> cookies;
     private HashMap<String, Object> result = new HashMap<String, Object>();
     private HashMap<String, Object> header = new HashMap<String, Object>();
     private HashMap<String, Object> hmContext = new HashMap<>();
     private HashMap<String, Object> hmPagedata = new HashMap<>();
-
+    public void setServiceTicket(String serviceTicket){
+        this.serviceTicket = serviceTicket;
+    }
+    public String getServiceTicket(){return serviceTicket;}
     public void setAuthToken(String authToken) {
         this.authToken = authToken;
     }
@@ -88,7 +92,7 @@ public class MainController {
         RedisDao redisDao;
         try {
             redisDao = (RedisDao) context.getBean("RedisDao");
-            sessionContext = redisDao.read(appconf.getSessionChannel()+"-"+this.getAuthToken(),""+sessionField);
+            sessionContext = redisDao.read(appconf.getSessionChannel()+"-"+sessionField,""+sessionField);
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
@@ -105,7 +109,7 @@ public class MainController {
             try {
                 redisDao = (RedisDao) context.getBean(
                         "RedisDao");
-                redisDao.save(appconf.getSessionChannel()+"-"+this.getAuthToken(), sessionField,
+                redisDao.save(appconf.getSessionChannel()+"-"+sessionField, sessionField,
                         (Object)sessionContext, appconf.getSessionTimeout());
             } catch (Exception e) {
                 e.printStackTrace();
@@ -168,7 +172,6 @@ public class MainController {
                         urlParam.put(key, value);
                     }
                 }
-
             }
         }
         urlParam.put("remote-ip", getIpAddress(request));
@@ -282,7 +285,16 @@ public class MainController {
                         this.setAuthToken(cookie.getValue());
                     }
                 }
+                if (cookie.getName().equals("st")) {
+                    if (StringUtils.isEmpty(this.getServiceTicket())) {
+                        this.setServiceTicket(cookie.getValue());
+                    }
+                }
             }
+        }
+        if(StringUtils.isEmpty(this.getAuthToken())){
+            this.setAuthToken(JugUtil.getLongUuid());
+            cookies.put(appconf.getTokenName(),this.getAuthToken());
         }
         this.setCookies(cookies);
     }
@@ -330,7 +342,7 @@ public class MainController {
             }
         }
     }
-    @RequestMapping(value = "/{module}/{executor}",method = {RequestMethod.POST, RequestMethod.GET},produces = {"application/xml", "application/json"})
+    @RequestMapping(value = "/{module}/{executor}",method = {RequestMethod.POST, RequestMethod.GET})
     public HashMap<String, Object> core(HttpServletRequest request,
                                         HttpServletResponse response,
                                         @PathVariable String module,
@@ -343,7 +355,7 @@ public class MainController {
 
         return coredefault(request,response,module,executor,serviceTicket,redirectToken,uploadFile,fileName,dealType);
     }
-    @RequestMapping(value = "/{module}",method = {RequestMethod.POST, RequestMethod.GET},produces = {"application/xml", "application/json"})
+    @RequestMapping(value = "/{module}",method = {RequestMethod.POST, RequestMethod.GET})
     public HashMap<String, Object> coredefault
             (HttpServletRequest request,
              HttpServletResponse response,
@@ -355,6 +367,10 @@ public class MainController {
              @RequestParam(value = "file-name",required = false)String[] fileName,
              @RequestParam(value = "deal-type",required = true)String dealType)throws Exception {
         this.setAuthToken(null);//令牌来自Cookies
+        this.setServiceTicket(serviceTicket);
+        if( Integer.parseInt(appconf.getRunningMode())<3){//测试阶段随机分配st 并会在后面自动复权
+            this.setServiceTicket(JugUtil.getLongUuid());
+        }
 
         /* +---------------------初始化数据暂时存储结构----------------------------+ */
         HashMap<String, Object> urldata = new HashMap<String, Object>();
@@ -407,15 +423,10 @@ public class MainController {
 
 
         // SESSION登陆验证，统一验证的方式有待在考虑
-        //1.判断是否需要验证
-        //2.判断session中是否有ST（根据autotoken）
-        //3.请求cas获取ST （服务提供方唯一标识+服务调用方唯一标识(autotoken)，需要鉴权方法名(excuter/dealtype)，ST）
-        // 3.1，CAS验证时没有autotoken，CAS跳转到登录页,登陆成功后分配autotoken并记录autotoken与serviceticken的对应关系
-        // 3.2，CAS验证时有autoToken，查询autotoken与serviceticken的对应关系
-        //  3.2.1，查到对应关系(分别从缓存和数据库中查找：CAS应该提供两种autotoken机制（自动过期的和永久的）)
-        //  3.2.2，没查到CAS跳转到登录页,登陆成功后分配autotoken并记录autotoken与serviceticken的对应关系
-        //4.获取到对应关系后应当入服务提供方session
-        if (isNeedSessionLoginCheck(module, executor) && this.getAuthToken() == null){
+        //1.所有的前台接口都不需要权限验证，但需要登录验证
+        //2.所有的后台能力都不需要登录验证，但需要权限验证
+        //3.权限验证需要确定 调用方 提供方 能力 三个条件
+        if (isNeedSessionLoginCheck(module, executor) && this.getSessionContext(this.getAuthToken()).get(authorityConfig.getSessionObjName()) == null){
             String requestURL;
             if (request.getQueryString() != null) {
                 requestURL = request.getRequestURL() + "?" + request.getQueryString();
@@ -434,14 +445,17 @@ public class MainController {
             }
             response.sendRedirect(authorityConfig.getLoginPage() + "?redirect-url=" + redirectUrlParam);
             return this.getResult();
-        }else if(isNeedSessionLimitCheck(module, executor) && this.getSessionContext(dealType).size() == 0){
+        }else if(isNeedSessionLimitCheck(module, executor) && this.getSessionContext(dealType).get(this.getServiceTicket()) == null){
 
             /* +-------------------------session相关处理--------------------------+ */
-            if( Integer.parseInt(appconf.getRunningMode())<3){ //给与全部权限
+            if( Integer.parseInt(appconf.getRunningMode())<3){ //自动赋当前权限 相当于给与全部权限
                 HashMap st = new HashMap<String, Object>();
-                st.put("ST","1111111111111111111111111111111");
+                st.put(this.getServiceTicket(),"true");
                 this.setSessionContext(st,dealType);
-            }else {
+            }
+            if( this.getSessionContext(dealType).get(this.getServiceTicket()).equals("true")){
+
+            } else {
                 /* 没有权限 */
                 HashMap<String,Object> errDataSet=new HashMap<String,Object>();
                 errDataSet.put("Errmsg","服务调用者没有此操作权限，操作功能："+module+"=>"+executor+"=>"+dealType);
@@ -488,7 +502,7 @@ public class MainController {
             this.setResult(ReturnUtil.THROW_ERROR, si.getoutpool());
         }
 
-        /*-------------------------请求最后保存session -----------------------------+*/
+        /*------------------------- 请求最后保存session -----------------------------+*/
         this.setSessionContext((HashMap<String, Object>) si.getContext().get("session"),this.getAuthToken());
         /*--------------------------------------------------------------------------*/
 

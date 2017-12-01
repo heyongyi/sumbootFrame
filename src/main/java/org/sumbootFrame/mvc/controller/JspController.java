@@ -76,7 +76,7 @@ public class JspController {
     public ModelAndView jspCore(
             HttpServletRequest request,
             HttpServletResponse response,
-            @PathVariable String module,
+            @PathVariable(value = "module") String module,
                                 @PathVariable(value = "executor") String executor,
                                 @RequestParam(value = "redirecttoken", required = false) String redirecttoken,
                                 Map<String,Object> map){
@@ -92,5 +92,19 @@ public class JspController {
             return new ModelAndView(executor);
         }
 
+    }
+    @RequestMapping(value = "/{module}/{way}/{executor}_jsp",method = {RequestMethod.POST, RequestMethod.GET})
+    public ModelAndView jspdefaultCore(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            @PathVariable(value = "module") String module,
+            @PathVariable(value = "way") String way,
+            @PathVariable(value = "executor") String executor,
+            Map<String,Object> map){
+         /* +------------------------- 返回跨域设置处理 -------------------------+ */
+        handleResponseHeader(response, request.getHeader("referer"));
+        map.put("module",module);
+        map.put("path",way);
+        return new ModelAndView(way+"/"+executor);
     }
 }
