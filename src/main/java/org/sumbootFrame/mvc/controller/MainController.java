@@ -214,7 +214,7 @@ public class MainController {
         RedisDao redisDao;
         try {
             redisDao = (RedisDao) context.getBean("RedisDao");
-            cachedParam = redisDao.read(appconf.getCacheChanel(), ""+cacheToken);
+            cachedParam = redisDao.read(appconf.getCacheChanel()+"-"+cacheToken, ""+cacheToken);
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
@@ -226,7 +226,7 @@ public class MainController {
         if(cacheToken != null){
             try {
                 redisDao = (RedisDao) context.getBean("RedisDao");
-                redisDao.save(appconf.getCacheChanel(), ""+cacheToken, (Object)param, appconf.getCacheTimeout());
+                redisDao.save(appconf.getCacheChanel()+"-"+cacheToken, ""+cacheToken, (Object)param, appconf.getCacheTimeout());
             } catch (Exception e) {
                 e.printStackTrace();
                 throw e;
@@ -499,6 +499,9 @@ public class MainController {
         } catch (MyException e) {
             this.setResult(e.getRet(), si.getoutpool());
         } catch (Exception e) {
+            if(Integer.parseInt(this.appconf.getRunningMode()) < 2) {
+                this.logger.debug("SUM boot=>", e);
+            }
             this.setResult(ReturnUtil.THROW_ERROR, si.getoutpool());
         }
 

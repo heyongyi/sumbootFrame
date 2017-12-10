@@ -36,7 +36,7 @@ public class JspController {
         RedisDao redisDao;
         try {
             redisDao = (RedisDao) context.getBean("RedisDao");
-            cachedParam = redisDao.read(appconf.getCacheChanel(), ""+cacheToken);
+            cachedParam = redisDao.read(appconf.getCacheChanel()+"-"+cacheToken, ""+cacheToken);
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
