@@ -78,18 +78,24 @@ public class JspController {
             HttpServletResponse response,
             @PathVariable(value = "module") String module,
                                 @PathVariable(value = "executor") String executor,
-                                @RequestParam(value = "redirecttoken", required = false) String redirecttoken,
-                                Map<String,Object> map){
+                                @RequestParam(value = "redirecttoken", required = false) String redirecttoken
+                                ){
          /* +------------------------- 返回跨域设置处理 -------------------------+ */
         handleResponseHeader(response, request.getHeader("referer"));
         if(redirecttoken != null){
-            map.put("inpool",this.getRedirectCache(redirecttoken).get("inpool"));
+            Map<String,Object> map = new HashMap<String,Object>();
+//            map.put("inpool",this.getRedirectCache(redirecttoken).get("inpool"));
             map.put("dataBody",this.getRedirectCache(redirecttoken).get("dataBody"));
-            map.put("dataHead",this.getRedirectCache(redirecttoken).get("dataHead"));
-            return new ModelAndView(((HashMap)(map.get("dataBody"))).get("jsp").toString()) ;
+//            map.put("dataHead",this.getRedirectCache(redirecttoken).get("dataHead"));
+            ModelAndView view = new ModelAndView(((HashMap)(map.get("dataBody"))).get("jsp").toString());
+            view.addObject("inpool",this.getRedirectCache(redirecttoken).get("inpool"));
+            view.addObject("dataBody",this.getRedirectCache(redirecttoken).get("dataBody"));
+            view.addObject("dataHead",this.getRedirectCache(redirecttoken).get("dataHead"));
+            return  view;
         }else{
-            map.put("module",module);
-            return new ModelAndView(executor);
+            ModelAndView view = new ModelAndView(executor);
+            view.addObject("module",module);
+            return view;
         }
 
     }
