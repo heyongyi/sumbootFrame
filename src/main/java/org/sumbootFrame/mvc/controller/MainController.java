@@ -512,8 +512,17 @@ public class MainController {
 
         if(!StringUtils.isEmpty(si.getoutpool().get("jsp"))){
             String redirecttoken = JugUtil.getLongUuid();//随机生成
-//            response.sendRedirect("/"+module+"/"+et+"_jsp"+"?redirecttoken="+redirecttoken);
+            HashMap param = new HashMap();
+            param.put("inpool", si.getinpool());
+            param.put("dataBody", si.getoutpool());
+            param.put("dataHead", this.getHeader());
+            this.setRedirectCache(param, redirecttoken);
             request.getRequestDispatcher("/"+module+"/"+et+"_jsp"+"?redirecttoken="+redirecttoken).forward(request, response);
+            return this.getResult();
+        }else if(!StringUtils.isEmpty(si.getoutpool().get("jsp-redirect"))){
+            si.getoutpool().put("jsp",si.getoutpool().get("jsp-redirect"));
+            String redirecttoken = JugUtil.getLongUuid();//随机生成
+            response.sendRedirect("/"+module+"/"+et+"_jsp"+"?redirecttoken="+redirecttoken);
             HashMap param = new HashMap();
             param.put("inpool", si.getinpool());
             param.put("dataBody", si.getoutpool());

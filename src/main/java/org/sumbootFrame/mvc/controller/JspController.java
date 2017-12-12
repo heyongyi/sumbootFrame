@@ -5,14 +5,17 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.sumbootFrame.data.mao.RedisDao;
+import org.sumbootFrame.tools.ReturnUtil;
 import org.sumbootFrame.tools.config.AppConfig;
 import org.sumbootFrame.tools.config.ResponceConfig;
+import org.sumbootFrame.tools.config.ViewsConfig;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -31,6 +34,8 @@ public class JspController {
     AppConfig appconf;
     @Autowired
     ResponceConfig responceconf;
+    @Autowired
+    ViewsConfig viewsconf;
     public HashMap<String, Object> getRedirectCache(String cacheToken) {
         HashMap<String, Object> cachedParam;
         RedisDao redisDao;
@@ -72,6 +77,29 @@ public class JspController {
             }
         }
     }
+    private HashMap<String, Object> header = new HashMap<String, Object>();
+    private HashMap<String, Object> result = new HashMap<String, Object>();
+    public HashMap getResult() {return result;}
+    public HashMap getHeader() {
+        return header;
+    }
+    public void setResult(ReturnUtil retinfo, HashMap dataSet) {
+        this.getHeader().put("appName",appconf.getName());
+        this.getHeader().put("stateCode",retinfo.getStateCode());
+        this.getHeader().put("stateMsg",retinfo.getStateDetail().length()>0?retinfo.getStateDetail():retinfo.getStateMsg());
+        this.getHeader().put("success",retinfo.getStateCode().equals(ReturnUtil.SUCCESS.getStateCode()));
+        this.getResult().put("dataHead",this.getHeader());
+        this.getResult().put("dataBody",dataSet);
+    }
+    private String getExecutor(String module) {
+        String executor;
+        if(module != null && viewsconf.getUrlRouteDefault().containsKey(module)){
+            executor = (String) viewsconf.getUrlRouteDefault().get(module);
+        }else{
+            executor = null;
+        }
+        return executor;
+    }
     @RequestMapping(value = "/{module}/{executor}_jsp",method = {RequestMethod.POST, RequestMethod.GET})
     public ModelAndView jspCore(
             HttpServletRequest request,
@@ -83,19 +111,25 @@ public class JspController {
          /* +------------------------- 返回跨域设置处理 -------------------------+ */
         handleResponseHeader(response, request.getHeader("referer"));
         if(redirecttoken != null){
-            Map<String,Object> map = new HashMap<String,Object>();
-//            map.put("inpool",this.getRedirectCache(redirecttoken).get("inpool"));
-            map.put("dataBody",this.getRedirectCache(redirecttoken).get("dataBody"));
-//            map.put("dataHead",this.getRedirectCache(redirecttoken).get("dataHead"));
-            ModelAndView view = new ModelAndView(((HashMap)(map.get("dataBody"))).get("jsp").toString());
+            ModelAndView view = new ModelAndView(((HashMap)(this.getRedirectCache(redirecttoken).get("dataBody"))).get("jsp").toString());
             view.addObject("inpool",this.getRedirectCache(redirecttoken).get("inpool"));
             view.addObject("dataBody",this.getRedirectCache(redirecttoken).get("dataBody"));
             view.addObject("dataHead",this.getRedirectCache(redirecttoken).get("dataHead"));
             return  view;
         }else{
+
             ModelAndView view = new ModelAndView(executor);
-            view.addObject("module",module);
-            return view;
+            if(this.getExecutor(module) != null){
+                view.addObject("module",module);
+                view.setViewName(executor);
+                return view;
+            }else{
+                this.setResult(ReturnUtil.METHOD_ERROR,new HashMap());
+                view.addObject(this.getResult());
+                view.setViewName(null);
+                return view;
+            }
+
         }
 
     }
@@ -108,9 +142,20 @@ public class JspController {
             @PathVariable(value = "executor") String executor,
             Map<String,Object> map){
          /* +------------------------- 返回跨域设置处理 -------------------------+ */
-        handleResponseHeader(response, request.getHeader("referer"));
-        map.put("module",module);
-        map.put("path",way);
-        return new ModelAndView(way+"/"+executor);
+
+        ModelAndView view = new ModelAndView();
+        if(this.getExecutor(module) != null){
+            handleResponseHeader(response, request.getHeader("referer"));
+            map.put("module",module);
+            map.put("path",way);
+            view.setViewName(way+"/"+executor);
+            return view;
+        }else{
+            this.setResult(ReturnUtil.METHOD_ERROR,new HashMap());
+            view.addObject( this.getResult());
+            view.setViewName(null);
+            return view;
+        }
+
     }
 }
