@@ -110,26 +110,25 @@ public class JspController {
                                 ){
          /* +------------------------- 返回跨域设置处理 -------------------------+ */
         handleResponseHeader(response, request.getHeader("referer"));
+        ModelAndView view = new ModelAndView(executor);
+        if(this.getExecutor(module) == null){
+            HashMap<String,Object> errDataSet=new HashMap<String,Object>();
+            errDataSet.put("Errmsg","module不正确");
+            this.setResult(ReturnUtil.METHOD_ERROR,errDataSet);
+            view.addObject(this.getResult());
+            view.setViewName(null);
+            return view;
+        }
         if(redirecttoken != null){
-            ModelAndView view = new ModelAndView(((HashMap)(this.getRedirectCache(redirecttoken).get("dataBody"))).get("jsp").toString());
+            view = new ModelAndView(((HashMap)(this.getRedirectCache(redirecttoken).get("dataBody"))).get("jsp").toString());
             view.addObject("inpool",this.getRedirectCache(redirecttoken).get("inpool"));
             view.addObject("dataBody",this.getRedirectCache(redirecttoken).get("dataBody"));
             view.addObject("dataHead",this.getRedirectCache(redirecttoken).get("dataHead"));
             return  view;
         }else{
-
-            ModelAndView view = new ModelAndView(executor);
-            if(this.getExecutor(module) != null){
-                view.addObject("module",module);
-                view.setViewName(executor);
-                return view;
-            }else{
-                this.setResult(ReturnUtil.METHOD_ERROR,new HashMap());
-                view.addObject(this.getResult());
-                view.setViewName(null);
-                return view;
-            }
-
+            view.addObject("module",module);
+            view.setViewName(executor);
+            return view;
         }
 
     }
@@ -151,7 +150,9 @@ public class JspController {
             view.setViewName(way+"/"+executor);
             return view;
         }else{
-            this.setResult(ReturnUtil.METHOD_ERROR,new HashMap());
+            HashMap<String,Object> errDataSet=new HashMap<String,Object>();
+            errDataSet.put("Errmsg","module不正确");
+            this.setResult(ReturnUtil.METHOD_ERROR,errDataSet);
             view.addObject( this.getResult());
             view.setViewName(null);
             return view;
