@@ -294,8 +294,8 @@ public class MainController {
         }
         if(StringUtils.isEmpty(this.getAuthToken())){
             this.setAuthToken(JugUtil.getLongUuid());
-            cookies.put(appconf.getTokenName(),this.getAuthToken());
         }
+        cookies.put(appconf.getTokenName(),this.getAuthToken());
         this.setCookies(cookies);
     }
     private void handleResponseCookies(HttpServletResponse response) {//响应中返回cookies
@@ -366,7 +366,7 @@ public class MainController {
              @RequestParam(value = "upload-file", required = false) MultipartFile[] uploadFile,  // 文件上传参数
              @RequestParam(value = "file-name",required = false)String[] fileName,
              @RequestParam(value = "deal-type",required = true)String dealType)throws Exception {
-        this.setAuthToken(null);//令牌来自Cookies
+        this.setAuthToken(request.getAttribute("authToken")==null?null:request.getAttribute("authToken").toString());//令牌来自Cookies,第三方统一登录
         this.setServiceTicket(serviceTicket);
         if( Integer.parseInt(appconf.getRunningMode())<3){//测试阶段随机分配st 并会在后面自动复权
             this.setServiceTicket(JugUtil.getLongUuid());
@@ -535,7 +535,7 @@ public class MainController {
             handleResponseCookies(response);
             /* +------------------------- 返回跨域设置处理 -------------------------+ */
             handleResponseHeader(response, request.getHeader("referer"));
-
+            request.setAttribute("authToken",this.getAuthToken());
             hmPagedata.remove("uploadFile");
             return this.getResult();
         }
