@@ -498,11 +498,6 @@ public class MainController {
             }
         } catch (MyException e) {
             this.setResult(e.getRet(), si.getoutpool());
-        } catch (Exception e) {
-            if(Integer.parseInt(this.appconf.getRunningMode()) < 2) {
-                this.logger.debug("SUM boot=>", e);
-            }
-            this.setResult(ReturnUtil.THROW_ERROR, si.getoutpool());
         }
 
         /*------------------------- 请求最后保存session -----------------------------+*/

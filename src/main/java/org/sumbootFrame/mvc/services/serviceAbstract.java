@@ -111,8 +111,11 @@ public abstract class serviceAbstract implements ServiceInterface {
             }else{
                 this.getoutpool().put("errorDetail", e.getMessage());
             }
+            if( Integer.parseInt(appconf.getRunningMode())<3) {
+                logger.debug("SUM boot=>", e);
+            }
             serviceLog("end");
-            throw e;
+            throw new MyException(ReturnUtil.THROW_ERROR);
         }
     }
     @Transactional(value = "primaryTransactionManager",propagation = Propagation.REQUIRED,isolation = Isolation.DEFAULT,timeout=360,rollbackFor=RuntimeException.class)
@@ -132,8 +135,11 @@ public abstract class serviceAbstract implements ServiceInterface {
             }else{
                 this.getoutpool().put("errorDetail", e.getMessage());
             }
+            if( Integer.parseInt(appconf.getRunningMode())<3) {
+                logger.debug("SUM boot=>", e);
+            }
             serviceLog("end");
-            throw e;
+            throw new MyException(ReturnUtil.THROW_ERROR);
         }
     }
 
