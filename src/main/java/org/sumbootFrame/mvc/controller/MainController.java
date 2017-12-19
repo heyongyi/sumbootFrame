@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.view.RedirectView;
 import org.sumbootFrame.data.mao.RedisDao;
 import org.sumbootFrame.mvc.interfaces.ServiceInterface;
 import org.sumbootFrame.tools.ReturnUtil;
@@ -351,9 +352,10 @@ public class MainController {
                                         @RequestParam(value = "ct", required = false) String redirectToken,
                                         @RequestParam(value = "upload-file", required = false) MultipartFile[] uploadFile,  // 文件上传参数
                                         @RequestParam(value = "fileName",required = false)String[] fileName,
-                                        @RequestParam(value = "deal-type",required = true)String dealType)throws Exception {
+                                        @RequestParam(value = "deal-type",required = true)String dealType,
+                                        @RequestParam(value = "redirect-url", required = false) String redirectUrl)throws Exception {
 
-        return coredefault(request,response,module,executor,serviceTicket,redirectToken,uploadFile,fileName,dealType);
+        return coredefault(request,response,module,executor,serviceTicket,redirectToken,uploadFile,fileName,dealType,redirectUrl);
     }
     @RequestMapping(value = "/{module}",method = {RequestMethod.POST, RequestMethod.GET})
     public HashMap<String, Object> coredefault
@@ -365,7 +367,8 @@ public class MainController {
              @RequestParam(value = "ct", required = false) String redirectToken ,                   // 请求参数缓存令牌
              @RequestParam(value = "upload-file", required = false) MultipartFile[] uploadFile,  // 文件上传参数
              @RequestParam(value = "file-name",required = false)String[] fileName,
-             @RequestParam(value = "deal-type",required = true)String dealType)throws Exception {
+             @RequestParam(value = "deal-type",required = true)String dealType,
+             @RequestParam(value = "redirect-url", required = false) String redirectUrl)throws Exception {
         this.setAuthToken(request.getAttribute("authToken")==null?null:request.getAttribute("authToken").toString());//令牌来自Cookies,第三方统一登录
         this.setServiceTicket(serviceTicket);
         if( Integer.parseInt(appconf.getRunningMode())<3){//测试阶段随机分配st 并会在后面自动复权
@@ -443,7 +446,12 @@ public class MainController {
                 this.setRedirectCache(requestParam, reToken);
                 redirectUrlParam = URLEncoder.encode(requestURL + "?ct=" + reToken, "UTF-8");
             }
-            response.sendRedirect(authorityConfig.getLoginPage() + "?redirect-url=" + redirectUrlParam);
+            if(authorityConfig.getLoginPage().contains("?")){
+                response.sendRedirect(authorityConfig.getLoginPage() + "&redirect-url=" + redirectUrlParam);
+            }else{
+                response.sendRedirect(authorityConfig.getLoginPage() + "?redirect-url=" + redirectUrlParam);
+            }
+
             return this.getResult();
         }else if(isNeedSessionLimitCheck(module, executor) && this.getSessionContext(dealType).get(this.getServiceTicket()) == null){
 
@@ -483,7 +491,9 @@ public class MainController {
         si.setContext(hmContext);
         //所有的参数都放入inpool了
         si.setinpool(this.getHmPagedata());
-
+        if (!StringUtils.isEmpty(redirectUrl)) {
+            si.getinpool().put("redirectUrl",redirectUrl);
+        }
         Iterator urldataIt = urldata.keySet().iterator();
         while(urldataIt.hasNext()) {
             String param1 = (String)urldataIt.next();
@@ -498,6 +508,8 @@ public class MainController {
             }
         } catch (MyException e) {
             this.setResult(e.getRet(), si.getoutpool());
+            handleResponseHeader(response, request.getHeader("referer"));
+            return this.getResult();
         }
 
         /*------------------------- 请求最后保存session -----------------------------+*/
@@ -537,6 +549,16 @@ public class MainController {
             handleResponseHeader(response, request.getHeader("referer"));
             request.setAttribute("authToken",this.getAuthToken());
             hmPagedata.remove("uploadFile");
+            if (StringUtils.isEmpty(redirectUrl)) {
+                return this.getResult();
+            } else {
+                if(si.getLogicView().length()>1){
+                    response.sendRedirect(si.getLogicView());
+                }else{
+                    response.sendRedirect(redirectUrl);
+                }
+
+            }
             return this.getResult();
         }
 

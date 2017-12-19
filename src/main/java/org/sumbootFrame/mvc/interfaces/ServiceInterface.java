@@ -23,4 +23,5 @@ public interface ServiceInterface {
     public HashMap<String, Object> getContext();
 
     public Map<String, IDao> getDaoFactory() ;
+    public String getLogicView() ;
 }

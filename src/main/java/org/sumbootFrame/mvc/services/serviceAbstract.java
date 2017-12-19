@@ -27,6 +27,7 @@ public abstract class serviceAbstract implements ServiceInterface {
     private HashMap<String,Object> inpool = new HashMap<>();//输入参数池
     private int pageNum = 1;//分页
     private HashMap<String, Object> context;
+    private String LogicView = "";
 
     @Resource
     Map<String, IDao> daoFactory;
@@ -80,7 +81,9 @@ public abstract class serviceAbstract implements ServiceInterface {
     public String getLoginPage(){return authconfig.getLoginPage();}
     public String getSessionObjName(){return authconfig.getSessionObjName();}
     public HashMap<String,Object> getSessionObj(){return ((HashMap<String,Object>)this.getSession().get(getSessionObjName()));}
-
+    @Override
+    public String getLogicView(){return this.LogicView;}
+    public void setLogicView(String logicView){this.LogicView = logicView;}
     /**********************控制层调用函数**********************************/
     @Override
     public HashMap<String, Object> getContext() {return context;}
@@ -115,7 +118,11 @@ public abstract class serviceAbstract implements ServiceInterface {
                 logger.debug("SUM boot=>", e);
             }
             serviceLog("end");
-            throw new MyException(ReturnUtil.THROW_ERROR);
+            if(e.getClass().equals(MyException.class)){
+                throw e;
+            }else{
+                throw new MyException(ReturnUtil.THROW_ERROR);
+            }
         }
     }
     @Transactional(value = "primaryTransactionManager",propagation = Propagation.REQUIRED,isolation = Isolation.DEFAULT,timeout=360,rollbackFor=RuntimeException.class)
@@ -139,7 +146,12 @@ public abstract class serviceAbstract implements ServiceInterface {
                 logger.debug("SUM boot=>", e);
             }
             serviceLog("end");
-            throw new MyException(ReturnUtil.THROW_ERROR);
+            if(e.getClass().equals(MyException.class)){
+                throw e;
+            }else{
+                throw new MyException(ReturnUtil.THROW_ERROR);
+            }
+
         }
     }
 
