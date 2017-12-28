@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -38,7 +39,7 @@ import java.util.*;
 @RestController
 @Scope("request")
 public class MainController {
-    protected Logger logger = Logger.getLogger(this.getClass());
+    protected static final org.slf4j.Logger logger = LoggerFactory.getLogger(MainController.class);
     @Autowired
     ApplicationContext context;
     @Autowired
@@ -352,7 +353,7 @@ public class MainController {
                                         @RequestParam(value = "ct", required = false) String redirectToken,
                                         @RequestParam(value = "upload-file", required = false) MultipartFile[] uploadFile,  // 文件上传参数
                                         @RequestParam(value = "fileName",required = false)String[] fileName,
-                                        @RequestParam(value = "deal-type",required = true)String dealType,
+                                        @RequestParam(value = "deal-type",required = false)String dealType,
                                         @RequestParam(value = "redirect-url", required = false) String redirectUrl)throws Exception {
 
         return coredefault(request,response,module,executor,serviceTicket,redirectToken,uploadFile,fileName,dealType,redirectUrl);
@@ -367,12 +368,18 @@ public class MainController {
              @RequestParam(value = "ct", required = false) String redirectToken ,                   // 请求参数缓存令牌
              @RequestParam(value = "upload-file", required = false) MultipartFile[] uploadFile,  // 文件上传参数
              @RequestParam(value = "file-name",required = false)String[] fileName,
-             @RequestParam(value = "deal-type",required = true)String dealType,
+             @RequestParam(value = "deal-type",required = false)String dealType,
              @RequestParam(value = "redirect-url", required = false) String redirectUrl)throws Exception {
         this.setAuthToken(request.getAttribute("authToken")==null?null:request.getAttribute("authToken").toString());//令牌来自Cookies,第三方统一登录
         this.setServiceTicket(serviceTicket);
         if( Integer.parseInt(appconf.getRunningMode())<3){//测试阶段随机分配st 并会在后面自动复权
             this.setServiceTicket(JugUtil.getLongUuid());
+        }
+        String contextPath;
+        if(appconf.getContextPath() != null){
+            contextPath = appconf.getContextPath();
+        }else {
+            contextPath = request.getContextPath();
         }
 
         /* +---------------------初始化数据暂时存储结构----------------------------+ */
@@ -394,7 +401,7 @@ public class MainController {
 //      urldata.put("authToken", this.getAuthToken());
         urldata.put("module",module);
         urldata.put("executor",et);
-        urldata.put("deal-type",dealType);
+
         /* +------------------------- 处理请求路径url参数 ----------------------------+ */
         handleRequestUrl(request, urldata);
         try {
@@ -444,7 +451,12 @@ public class MainController {
                 requestParam.put("PageData", this.getHmPagedata());
                 String reToken = JugUtil.getLongUuid();//随机生成
                 this.setRedirectCache(requestParam, reToken);
-                redirectUrlParam = URLEncoder.encode(requestURL + "?ct=" + reToken, "UTF-8");
+                if(request.getQueryString() != null){
+                    redirectUrlParam = URLEncoder.encode(requestURL + "&ct=" + reToken, "UTF-8");
+                }else{
+                    redirectUrlParam = URLEncoder.encode(requestURL + "?ct=" + reToken, "UTF-8");
+                }
+
             }
             if(authorityConfig.getLoginPage().contains("?")){
                 response.sendRedirect(authorityConfig.getLoginPage() + "&redirect-url=" + redirectUrlParam);
@@ -466,7 +478,7 @@ public class MainController {
             } else {
                 /* 没有权限 */
                 HashMap<String,Object> errDataSet=new HashMap<String,Object>();
-                errDataSet.put("Errmsg","服务调用者没有此操作权限，操作功能："+module+"=>"+executor+"=>"+dealType);
+                errDataSet.put("errorDetail","服务调用者没有此操作权限，操作功能："+module+"=>"+executor+"=>"+dealType);
                 this.setResult(ReturnUtil.REQUEST_METHOD_NO_AUTH,errDataSet);
                 handleResponseHeader(response, request.getHeader("referer"));
                 return this.getResult();
@@ -479,7 +491,7 @@ public class MainController {
             si= (ServiceInterface)context.getBean(executor);
         } catch (NoSuchBeanDefinitionException e) {
             HashMap<String,Object> errDataSet=new HashMap<String,Object>();
-            errDataSet.put("Errmsg","NoSuchBeanDefinitionException");
+            errDataSet.put("errorDetail","NoSuchBeanDefinitionException");
             this.setResult(ReturnUtil.METHOD_ERROR, errDataSet);
             handleResponseHeader(response, request.getHeader("referer"));
             return this.getResult();
@@ -501,7 +513,9 @@ public class MainController {
         }
         /*-------------------------执行 service bean并返回结果 -----------------------------+*/
         try {
-            if(dealType.startsWith("select")||dealType.startsWith("query")||dealType.startsWith("get")){
+            if(!urldata.containsKey("deal-type")){
+                this.setResult(si.initface(), si.getoutpool());
+            }else if(urldata.get("deal-type").toString().startsWith("select")||urldata.get("deal-type").toString().startsWith("query")||urldata.get("deal-type").toString().startsWith("get")){
                 this.setResult(si.queryface(), si.getoutpool());
             }else{
                 this.setResult(si.dealface(), si.getoutpool());
@@ -523,23 +537,25 @@ public class MainController {
             param.put("inpool", si.getinpool());
             param.put("dataBody", si.getoutpool());
             param.put("dataHead", this.getHeader());
+            param.put("cookies", this.getCookies());
             this.setRedirectCache(param, redirecttoken);
             request.getRequestDispatcher("/"+module+"/"+et+"_jsp"+"?redirecttoken="+redirecttoken).forward(request, response);
             return this.getResult();
         }else if(!StringUtils.isEmpty(si.getoutpool().get("jsp-redirect"))){
             si.getoutpool().put("jsp",si.getoutpool().get("jsp-redirect"));
             String redirecttoken = JugUtil.getLongUuid();//随机生成
-            response.sendRedirect("/"+module+"/"+et+"_jsp"+"?redirecttoken="+redirecttoken);
+            response.sendRedirect(contextPath+"/"+module+"/"+et+"_jsp"+"?redirecttoken="+redirecttoken);
             HashMap param = new HashMap();
             param.put("inpool", si.getinpool());
             param.put("dataBody", si.getoutpool());
             param.put("dataHead", this.getHeader());
+            param.put("cookies", this.getCookies());
             this.setRedirectCache(param, redirecttoken);
             return this.getResult();
         }
         // 文件下载：判断业务逻辑层是否存在downLoadPath，fileName变量
         else if (!StringUtils.isEmpty(si.getoutpool().get("downLoadPath")) && !StringUtils.isEmpty(si.getoutpool().get("fileName"))) {
-            request.getRequestDispatcher("/"+module+"/download?dp="+ si.getoutpool().get("downLoadPath")+"&fn=" + si.getoutpool().get("fileName")).forward(request, response);
+            request.getRequestDispatcher(contextPath+"/"+module+"/download?dp="+ si.getoutpool().get("downLoadPath")+"&fn=" + si.getoutpool().get("fileName")).forward(request, response);
             return this.getResult();
         }
         else{

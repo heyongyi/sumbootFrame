@@ -14,9 +14,11 @@ import org.springframework.web.servlet.ModelAndView;
 import org.sumbootFrame.data.mao.RedisDao;
 import org.sumbootFrame.tools.ReturnUtil;
 import org.sumbootFrame.tools.config.AppConfig;
+import org.sumbootFrame.tools.config.CookieConfig;
 import org.sumbootFrame.tools.config.ResponceConfig;
 import org.sumbootFrame.tools.config.ViewsConfig;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
@@ -36,6 +38,8 @@ public class JspController {
     ResponceConfig responceconf;
     @Autowired
     ViewsConfig viewsconf;
+    @Autowired
+    CookieConfig cookieconf;
     public HashMap<String, Object> getRedirectCache(String cacheToken) {
         HashMap<String, Object> cachedParam;
         RedisDao redisDao;
@@ -100,6 +104,21 @@ public class JspController {
         }
         return executor;
     }
+    private void handleResponseCookies(HttpServletResponse response,HashMap<String,Object> cookies) {//响应中返回cookies
+        for (Map.Entry<String, Object> entry : cookies.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue().toString();
+            Cookie cookie = new Cookie(key, value);
+            if (!StringUtils.isEmpty(cookieconf.getDomain())) {
+                cookie.setDomain(cookieconf.getDomain());
+            }
+            cookie.setHttpOnly(cookieconf.getHttpOnly());
+            cookie.setSecure(cookieconf.getSecure());
+            cookie.setPath(cookieconf.getPath());
+            cookie.setMaxAge(cookieconf.getAge());
+            response.addCookie(cookie);
+        }
+    }
     @RequestMapping(value = "/{module}/{executor}_jsp",method = {RequestMethod.POST, RequestMethod.GET})
     public ModelAndView jspCore(
             HttpServletRequest request,
@@ -110,6 +129,7 @@ public class JspController {
                                 ){
          /* +------------------------- 返回跨域设置处理 -------------------------+ */
         handleResponseHeader(response, request.getHeader("referer"));
+
         ModelAndView view = new ModelAndView(executor);
         if(this.getExecutor(module) == null){
             HashMap<String,Object> errDataSet=new HashMap<String,Object>();
@@ -120,6 +140,7 @@ public class JspController {
             return view;
         }
         if(redirecttoken != null){
+            handleResponseCookies(response,(HashMap<String,Object>)this.getRedirectCache(redirecttoken).get("cookies"));
             view = new ModelAndView(((HashMap)(this.getRedirectCache(redirecttoken).get("dataBody"))).get("jsp").toString());
             view.addObject("inpool",this.getRedirectCache(redirecttoken).get("inpool"));
             view.addObject("dataBody",this.getRedirectCache(redirecttoken).get("dataBody"));

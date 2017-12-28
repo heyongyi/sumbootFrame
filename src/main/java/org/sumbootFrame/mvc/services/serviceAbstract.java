@@ -1,7 +1,7 @@
 package org.sumbootFrame.mvc.services;
 
 
-import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
@@ -22,7 +22,7 @@ import java.util.Map;
  * Created by thinkpad on 2017/9/13.
  */
 public abstract class serviceAbstract implements ServiceInterface {
-    protected Logger logger = Logger.getLogger(this.getClass());
+    protected static final org.slf4j.Logger logger = LoggerFactory.getLogger(serviceAbstract.class);
     private HashMap<String,Object> outpool = new HashMap<String,Object>();//输出参数池
     private HashMap<String,Object> inpool = new HashMap<>();//输入参数池
     private int pageNum = 1;//分页
@@ -36,6 +36,7 @@ public abstract class serviceAbstract implements ServiceInterface {
     @Autowired
     AuthorityConfig authconfig;
     /**********************服务层调用函数**********************************/
+    public abstract ReturnUtil init() throws Exception;
     public abstract ReturnUtil query() throws Exception;
     public abstract ReturnUtil execute() throws Exception;
 
@@ -154,7 +155,34 @@ public abstract class serviceAbstract implements ServiceInterface {
 
         }
     }
-
+    @Transactional(value = "primaryTransactionManager",propagation = Propagation.REQUIRED,isolation = Isolation.DEFAULT,timeout=360,rollbackFor=RuntimeException.class)
+    public ReturnUtil initface() throws Exception {
+        try {
+            serviceLog("begin");
+            ReturnUtil ret = init();
+            if (ret.getStateCode() != ReturnUtil.SUCCESS.getStateCode()) {
+                throw new MyException(ret);
+            }else{
+                serviceLog("end");
+            }
+            return ret;
+        }catch (Exception e){
+            if( Integer.parseInt(appconf.getRunningMode())<2) {
+                this.getoutpool().put("errorDetail", e);
+            }else{
+                this.getoutpool().put("errorDetail", e.getMessage());
+            }
+            if( Integer.parseInt(appconf.getRunningMode())<3) {
+                logger.debug("SUM boot=>", e);
+            }
+            serviceLog("end");
+            if(e.getClass().equals(MyException.class)){
+                throw e;
+            }else{
+                throw new MyException(ReturnUtil.THROW_ERROR);
+            }
+        }
+    }
     public void initParam() throws Exception {
         HashMap<String, Object> inpool =this.getinpool();
         if (inpool != null) {

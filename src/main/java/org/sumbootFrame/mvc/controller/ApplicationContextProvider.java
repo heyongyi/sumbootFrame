@@ -3,30 +3,62 @@ package org.sumbootFrame.mvc.controller;
 /**
  * Created by thinkpad on 2016/12/12.
  */
+import com.sun.tools.internal.xjc.reader.xmlschema.bindinfo.BIConversion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Service;
+import org.sumbootFrame.data.mao.RedisDao;
+import org.sumbootFrame.tools.config.AppConfig;
 import org.sumbootFrame.tools.config.PubSubConfig;
 import org.sumbootFrame.tools.config.RedisConfig;
 import org.sumbootFrame.tools.mq.PubClientUtil;
 import org.sumbootFrame.tools.mq.PubSubListener;
 import org.sumbootFrame.tools.mq.SubClientUtil;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Handler;
 
 @Service
 public class ApplicationContextProvider implements ApplicationListener<ContextRefreshedEvent> {
     private static ApplicationContext applicationContext = null;
     private static String subscriberCenter = null;
     private static String messagetxid = null;
+    private static HashMap<String,Object> memoryCache = new HashMap<>();
+    @Autowired
+    AppConfig appconf;
     @Autowired
     PubSubConfig pubSubConfig;
     @Autowired
     RedisConfig redisConfig;
+    public HashMap<String, Object> getMemcache(String memKey) {
+        HashMap<String, Object> cachedParam;
+        RedisDao redisDao;
+        try {
+            redisDao = (RedisDao) applicationContext.getBean("RedisDao");
+            cachedParam = redisDao.read(appconf.getCacheChanel()+"-mem", ""+memKey);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
+        return cachedParam;
+    }
 
+    public void setMemcache(HashMap<String, Object> param, String memKey) {
+        RedisDao redisDao;
+        if(memKey != null){
+            try {
+                redisDao = (RedisDao) applicationContext.getBean("RedisDao");
+                redisDao.save(appconf.getCacheChanel()+"-mem", ""+memKey, (Object)param, -1);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw e;
+            }
+        }
+    }
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         if(applicationContext == null){
@@ -38,6 +70,8 @@ public class ApplicationContextProvider implements ApplicationListener<ContextRe
         if(messagetxid == null){
             messagetxid = pubSubConfig.getMessagetxid();
         }
+
+
         if(redisConfig.getCluster() != null){
             Thread subThread = new Thread(new Runnable() {
                 @Override
@@ -70,5 +104,8 @@ public class ApplicationContextProvider implements ApplicationListener<ContextRe
     public static String getSubscriberCenter(){return subscriberCenter;}
     public static String getMessagetxid() {
         return messagetxid;
+    }
+    public static HashMap<String, Object> getMemoryCache() {
+        return memoryCache;
     }
 }

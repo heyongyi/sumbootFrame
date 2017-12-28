@@ -50,14 +50,7 @@ public class RedisDao implements IDao{
         if (json != null) {
             try {
                 HashMap<String, Object> map = mapper.readValue(json, HashMap.class);
-//                try{
-//                    for(String k : map.keySet()){
-//                        System.out.println("key="+k+" values="+map.get(k).toString());
-//                    }
-//                }catch(Exception e){
-//
-//                    System.out.println("redis read prefix="+prefix+"   key="+key);
-//                }
+
                 return map;
             } catch (IOException e) {
                 e.printStackTrace();

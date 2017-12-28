@@ -12,6 +12,7 @@ import java.util.Map;
  */
 public interface ServiceInterface {
     /*控制层暴露接口*/
+    public ReturnUtil initface() throws Exception;
     public ReturnUtil dealface() throws Exception;
     public ReturnUtil queryface() throws Exception;
     public HashMap<String,Object> getoutpool();   //对上层提供获取输出，和写入输入就够了

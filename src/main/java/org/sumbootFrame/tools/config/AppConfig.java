@@ -17,8 +17,8 @@ public class AppConfig {
     private String name ;
     private String tokenName;
     private String sessionChannel;
-    private long sessionTimeout;
     private String cacheChanel;
+    private long sessionTimeout;
     private long cacheTimeout;
     private String sysdateSql;
     private int pageSize;
@@ -27,18 +27,20 @@ public class AppConfig {
     private String exclueLoginModules;
     private String exclueLoginExecuters;
     private String runningMode;
+    private String contextPath;
 
+    public String getContextPath(){return contextPath ;}
+    public void setContextPath(String contextPath){this.contextPath=contextPath;}
 
     public String getName(){return name ;}
     public void setName(String name){this.name=name;}
-    public String getTokenName(){return tokenName;}
-    public void setTokenName(String tokenName){this.tokenName = tokenName;}
-    public String getSessionChannel(){return sessionChannel;}
-    public void setSessionChannel(String sessionChannel){this.sessionChannel = sessionChannel;}
+
+    public String getTokenName(){return name+"Token";}
+    public String getSessionChannel(){return name+"Session";}
+    public String getCacheChanel(){return name+"Cache";}
+
     public long getSessionTimeout(){return sessionTimeout;}
     public void setSessionTimeout(long sessionTimeout){this.sessionTimeout = sessionTimeout;}
-    public String getCacheChanel(){return cacheChanel;}
-    public void setCacheChanel(String cacheChanel){this.cacheChanel=cacheChanel;}
     public long getCacheTimeout(){return cacheTimeout;}
     public void setCacheTimeout(long requestCacheTimeout){this.cacheTimeout=requestCacheTimeout;}
 
