@@ -3,24 +3,19 @@ package org.sumbootFrame.mvc.controller;
 /**
  * Created by thinkpad on 2016/12/12.
  */
+import com.google.gson.JsonObject;
 import com.sun.tools.internal.xjc.reader.xmlschema.bindinfo.BIConversion;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Service;
 import org.sumbootFrame.data.mao.RedisDao;
-import org.sumbootFrame.tools.config.AppConfig;
-import org.sumbootFrame.tools.config.PubSubConfig;
-import org.sumbootFrame.tools.config.RedisConfig;
+import org.sumbootFrame.tools.config.*;
 import org.sumbootFrame.tools.mq.PubClientUtil;
-import org.sumbootFrame.tools.mq.PubSubListener;
-import org.sumbootFrame.tools.mq.SubClientUtil;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Handler;
 
 @Service
 public class ApplicationContextProvider implements ApplicationListener<ContextRefreshedEvent> {
@@ -28,18 +23,21 @@ public class ApplicationContextProvider implements ApplicationListener<ContextRe
     private static String subscriberCenter = null;
     private static String messagetxid = null;
     private static HashMap<String,Object> memoryCache = new HashMap<>();
+    private static AppConfig appConfigStatic ;
     @Autowired
     AppConfig appconf;
     @Autowired
     PubSubConfig pubSubConfig;
     @Autowired
     RedisConfig redisConfig;
-    public HashMap<String, Object> getMemcache(String memKey) {
+    @Autowired
+    ViewsConfig viewsConfig;
+    private static HashMap<String, Object> getMemcache(String memKey) {
         HashMap<String, Object> cachedParam;
         RedisDao redisDao;
         try {
             redisDao = (RedisDao) applicationContext.getBean("RedisDao");
-            cachedParam = redisDao.read(appconf.getCacheChanel()+"-mem", ""+memKey);
+            cachedParam = redisDao.read(appConfigStatic.getCacheChanel()+"-mem", ""+memKey);
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
@@ -47,12 +45,12 @@ public class ApplicationContextProvider implements ApplicationListener<ContextRe
         return cachedParam;
     }
 
-    public void setMemcache(HashMap<String, Object> param, String memKey) {
+    public static void setMemcache(HashMap<String, Object> param, String memKey) {
         RedisDao redisDao;
         if(memKey != null){
             try {
                 redisDao = (RedisDao) applicationContext.getBean("RedisDao");
-                redisDao.save(appconf.getCacheChanel()+"-mem", ""+memKey, (Object)param, -1);
+                redisDao.save(appConfigStatic.getCacheChanel()+"-mem", ""+memKey, (Object)param, -1);
             } catch (Exception e) {
                 e.printStackTrace();
                 throw e;
@@ -70,34 +68,55 @@ public class ApplicationContextProvider implements ApplicationListener<ContextRe
         if(messagetxid == null){
             messagetxid = pubSubConfig.getMessagetxid();
         }
+        appConfigStatic = appconf;
+        if(pubSubConfig.getInterval()>0){
+            PubThread pubThread = new PubThread();
+            pubThread.setDaemon(true);
+            pubThread.start();
+        }
 
-
-        if(redisConfig.getCluster() != null){
-            Thread subThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    String[] subChannels = pubSubConfig.getSubChannel().split(",");
+    }
+    private class PubThread extends Thread {
+        @Override
+        public void run() {
+            while (true) {
+                final String channel = pubSubConfig.getRegisterChannel();
+                PubClientUtil pubClient ;
+                if(redisConfig.getCluster() != null){
                     List<String> clusterNodes = redisConfig.getCluster().getNodes();
-                    if(subChannels.length > 0 && clusterNodes.size()>0){
-                        SubClientUtil SubClient = new SubClientUtil(pubSubConfig.getClient(),
-                                redisConfig.getPassword(),
-                                (String[])clusterNodes.subList(0,redisConfig.getCluster().getMaxRedirects()).toArray());
-                        SubClient.sub(subChannels);
+                    pubClient = new PubClientUtil(redisConfig.getPassword(),
+                            (String[])clusterNodes.subList(0,redisConfig.getCluster().getMaxRedirects()).toArray(new String[redisConfig.getCluster().getMaxRedirects()]));
+                }else{
+                    pubClient = new PubClientUtil(redisConfig.getHost(),redisConfig.getPort(),redisConfig.getDatabase(),redisConfig.getPassword());
+                }
+
+                JsonObject msg = new JsonObject();
+
+                msg.addProperty("appName",appconf.getName());
+                msg.addProperty("runMode",appconf.getRunningMode());
+                for(String key:viewsConfig.getUrlRouteDefault().keySet()){
+                    msg.addProperty("module",key);
+                }
+                String executor = "";
+                for(String key:viewsConfig.getUrlRoute().keySet()){
+                    executor+=key+"^";
+                }
+                msg.addProperty("executor",executor);
+
+
+                String message = msg.toString();
+                pubClient.pub(channel, message);
+                synchronized (this) {
+                    try {
+                        Thread.sleep(pubSubConfig.getInterval());
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 }
-            });
-            subThread.setDaemon(true);
-            subThread.start();
-
-            final String channel = pubSubConfig.getRegisterChannel();
-
-            List<String> clusterNodes = redisConfig.getCluster().getNodes();
-            PubClientUtil pubClient = new PubClientUtil(redisConfig.getPassword(),(String[])clusterNodes.subList(0,redisConfig.getCluster().getMaxRedirects()).toArray(new String[redisConfig.getCluster().getMaxRedirects()]));
-
-            String message = "pubtime-1";
-            pubClient.pub(channel, message);
+            }
         }
     }
+
     public static ApplicationContext getApplicationContext() {
         return applicationContext;
     }
@@ -105,7 +124,14 @@ public class ApplicationContextProvider implements ApplicationListener<ContextRe
     public static String getMessagetxid() {
         return messagetxid;
     }
-    public static HashMap<String, Object> getMemoryCache() {
-        return memoryCache;
+    public static HashMap<String, Object> getMemoryCache(String memKey) {
+        if(!memoryCache.containsKey(memKey)){
+            memoryCache.put(memKey,getMemcache(memKey));
+        }
+        return (HashMap<String, Object>)memoryCache.get(memKey);
+    }
+    public static void setMemoryCache(String memKey,HashMap<String, Object> memVal){
+        setMemcache(memVal,memKey);
+        memoryCache.put(memKey,memVal);
     }
 }

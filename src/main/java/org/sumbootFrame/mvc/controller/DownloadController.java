@@ -72,14 +72,20 @@ public class DownloadController {
             while (-1 != (bytesRead = bis.read(buff, 0, buff.length))) {
                 bos.write(buff, 0, bytesRead);
             }
+
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
         } finally {
+
             if (bis != null)
                 bis.close();
-            if (bos != null)
+            if (bos != null){
+                bos.flush();
                 bos.close();
+                bos=null;
+            }
+
         }
         return null;
     }

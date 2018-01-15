@@ -1,4 +1,5 @@
 package org.sumbootFrame.tools.config;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 })
 @Component
 public class AppConfig {
+
     private String name ;
     private String tokenName;
     private String sessionChannel;
@@ -33,7 +35,6 @@ public class AppConfig {
     public void setContextPath(String contextPath){this.contextPath=contextPath;}
 
     public String getName(){return name ;}
-    public void setName(String name){this.name=name;}
 
     public String getTokenName(){return name+"Token";}
     public String getSessionChannel(){return name+"Session";}
@@ -65,4 +66,8 @@ public class AppConfig {
 
     public String getRunningMode(){return runningMode;}
     public void setRunningMode(String runningMode){this.runningMode = runningMode;}
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

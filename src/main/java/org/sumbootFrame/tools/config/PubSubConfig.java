@@ -9,8 +9,7 @@ import org.springframework.stereotype.Component;
 
 @ConfigurationProperties(prefix = "sum.pubsub")
 @PropertySource({
-        "classpath:properties/sum.properties",
-        "classpath:self-properties/sum-self.properties"
+        "classpath:application.properties"
 })
 @Component
 public class PubSubConfig {
@@ -19,7 +18,7 @@ public class PubSubConfig {
     private String client;
     private String messagetxid;
     private String registerChannel;
-
+    private int interval;
     public String getSubscriberCenter() {
         return subscriberCenter;
     }
@@ -58,5 +57,13 @@ public class PubSubConfig {
 
     public void setRegisterChannel(String registerChannel) {
         this.registerChannel = registerChannel;
+    }
+
+    public int getInterval() {
+        return interval;
+    }
+
+    public void setInterval(int interval) {
+        this.interval = interval;
     }
 }

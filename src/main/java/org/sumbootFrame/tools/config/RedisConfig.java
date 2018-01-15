@@ -16,8 +16,33 @@ import java.util.List;
 @Component
 public class RedisConfig {
     private String password;
-
+    private String host = "localhost";
+    private int port = 6379;
+    private int database = 0;
     private RedisConfig.Cluster cluster;
+
+
+    public String getHost() {
+        return this.host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+    public int getPort() {
+        return this.port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+    public int getDatabase() {
+        return this.database;
+    }
+
+    public void setDatabase(int database) {
+        this.database = database;
+    }
     public static class Cluster {
         private List<String> nodes;
         private Integer maxRedirects;

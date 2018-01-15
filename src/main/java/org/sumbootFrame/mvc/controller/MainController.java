@@ -26,6 +26,7 @@ import org.sumbootFrame.tools.exception.MyException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -370,15 +371,16 @@ public class MainController {
              @RequestParam(value = "file-name",required = false)String[] fileName,
              @RequestParam(value = "deal-type",required = false)String dealType,
              @RequestParam(value = "redirect-url", required = false) String redirectUrl)throws Exception {
-        this.setAuthToken(request.getAttribute("authToken")==null?null:request.getAttribute("authToken").toString());//令牌来自Cookies,第三方统一登录
+
+        this.setAuthToken(request.getAttribute("authToken") == null ? null : request.getAttribute("authToken").toString());//令牌来自Cookies,第三方统一登录
         this.setServiceTicket(serviceTicket);
-        if( Integer.parseInt(appconf.getRunningMode())<3){//测试阶段随机分配st 并会在后面自动复权
+        if (Integer.parseInt(appconf.getRunningMode()) < 3) {//测试阶段随机分配st 并会在后面自动复权
             this.setServiceTicket(JugUtil.getLongUuid());
         }
         String contextPath;
-        if(appconf.getContextPath() != null){
+        if (appconf.getContextPath() != null) {
             contextPath = appconf.getContextPath();
-        }else {
+        } else {
             contextPath = request.getContextPath();
         }
 
@@ -389,8 +391,8 @@ public class MainController {
         /* +--------------------------请求路径透明化处理--------------------------+ */
         String executor = getExecutor(module, et);
         if (StringUtils.isEmpty(executor)) {
-            HashMap<String,Object> errDataSet=new HashMap<String,Object>();
-            errDataSet.put("Errmsg","executor is null");
+            HashMap<String, Object> errDataSet = new HashMap<String, Object>();
+            errDataSet.put("Errmsg", "executor is null");
             this.setResult(ReturnUtil.METHOD_ERROR, errDataSet);
             handleResponseHeader(response, request.getHeader("referer"));
             return this.getResult();
@@ -399,8 +401,8 @@ public class MainController {
         handleCookies(request);
         /*-------------------------初始化请求路径通用参------------------------+*/
 //      urldata.put("authToken", this.getAuthToken());
-        urldata.put("module",module);
-        urldata.put("executor",et);
+        urldata.put("module", module);
+        urldata.put("executor", et);
 
         /* +------------------------- 处理请求路径url参数 ----------------------------+ */
         handleRequestUrl(request, urldata);
@@ -411,24 +413,24 @@ public class MainController {
             }
         } catch (Exception e) {
                 /* 参数格式化异常捕捉 */
-            HashMap<String,Object> errDataSet=new HashMap<String,Object>();
-            errDataSet.put("Errmsg",e.getMessage());
-            this.setResult(ReturnUtil.REQUEST_PARAM_FORMAT_ERROR,errDataSet);
+            HashMap<String, Object> errDataSet = new HashMap<String, Object>();
+            errDataSet.put("Errmsg", e.getMessage());
+            this.setResult(ReturnUtil.REQUEST_PARAM_FORMAT_ERROR, errDataSet);
             handleResponseHeader(response, request.getHeader("referer"));
             return this.getResult();
         }
         /* +-------------------------处理请求中的form数据 排除url中的参数-------------------+ */
         handleCommonFormData(request, urldata, formdata);//获取@RequestPart的formdata参数  单元测试中的params参数也在此
         /* +-----------------------formdata和jsonbody 放入HmPagedata---------------------+ */
-        if(redirectToken == null){
-            conformHmPagedata(formdata,jsonbody);
-        }else{
+        if (redirectToken == null) {
+            conformHmPagedata(formdata, jsonbody);
+        } else {
             this.setHmPagedata(this.getRedirectCache(redirectToken));
         }
         /*-------------------------上传文件参数传递给业务层--------------------+*/
         if (uploadFile != null) {
             this.getHmPagedata().put("uploadFile", uploadFile);
-            this.getHmPagedata().put("fileName",fileName);
+            this.getHmPagedata().put("fileName", fileName);
         }
 
 
@@ -436,13 +438,22 @@ public class MainController {
         //1.所有的前台接口都不需要权限验证，但需要登录验证
         //2.所有的后台能力都不需要登录验证，但需要权限验证
         //3.权限验证需要确定 调用方 提供方 能力 三个条件
-        if (isNeedSessionLoginCheck(module, executor) && this.getSessionContext(this.getAuthToken()).get(authorityConfig.getSessionObjName()) == null){
+        if (isNeedSessionLoginCheck(module, executor) && this.getSessionContext(this.getAuthToken()).get(authorityConfig.getSessionObjName()) == null) {
             String requestURL;
-            if (request.getQueryString() != null) {
-                requestURL = request.getRequestURL() + "?" + request.getQueryString();
+            if (appconf.getContextPath() != null) {
+                if (request.getQueryString() != null) {
+                    requestURL = appconf.getContextPath() + "/" + module + "/" + et + "?" + request.getQueryString();
+                } else {
+                    requestURL = appconf.getContextPath() + "/" + module + "/" + et;
+                }
             } else {
-                requestURL = request.getRequestURL().toString();
+                if (request.getQueryString() != null) {
+                    requestURL = request.getRequestURL() + "?" + request.getQueryString();
+                } else {
+                    requestURL = request.getRequestURL().toString();
+                }
             }
+
             String redirectUrlParam = null;
             if (request.getMethod().equals("GET")) {
                 redirectUrlParam = URLEncoder.encode(requestURL, "UTF-8");
@@ -451,35 +462,35 @@ public class MainController {
                 requestParam.put("PageData", this.getHmPagedata());
                 String reToken = JugUtil.getLongUuid();//随机生成
                 this.setRedirectCache(requestParam, reToken);
-                if(request.getQueryString() != null){
+                if (request.getQueryString() != null) {
                     redirectUrlParam = URLEncoder.encode(requestURL + "&ct=" + reToken, "UTF-8");
-                }else{
+                } else {
                     redirectUrlParam = URLEncoder.encode(requestURL + "?ct=" + reToken, "UTF-8");
                 }
 
             }
-            if(authorityConfig.getLoginPage().contains("?")){
+            if (authorityConfig.getLoginPage().contains("?")) {
                 response.sendRedirect(authorityConfig.getLoginPage() + "&redirect-url=" + redirectUrlParam);
-            }else{
+            } else {
                 response.sendRedirect(authorityConfig.getLoginPage() + "?redirect-url=" + redirectUrlParam);
             }
 
             return this.getResult();
-        }else if(isNeedSessionLimitCheck(module, executor) && this.getSessionContext(dealType).get(this.getServiceTicket()) == null){
+        } else if (isNeedSessionLimitCheck(module, executor) && this.getSessionContext(dealType).get(this.getServiceTicket()) == null) {
 
             /* +-------------------------session相关处理--------------------------+ */
-            if( Integer.parseInt(appconf.getRunningMode())<3){ //自动赋当前权限 相当于给与全部权限
+            if (Integer.parseInt(appconf.getRunningMode()) < 3) { //自动赋当前权限 相当于给与全部权限
                 HashMap st = new HashMap<String, Object>();
-                st.put(this.getServiceTicket(),"true");
-                this.setSessionContext(st,dealType);
+                st.put(this.getServiceTicket(), "true");
+                this.setSessionContext(st, dealType);
             }
-            if( this.getSessionContext(dealType).get(this.getServiceTicket()).equals("true")){
+            if (this.getSessionContext(dealType).get(this.getServiceTicket()).equals("true")) {
 
             } else {
                 /* 没有权限 */
-                HashMap<String,Object> errDataSet=new HashMap<String,Object>();
-                errDataSet.put("errorDetail","服务调用者没有此操作权限，操作功能："+module+"=>"+executor+"=>"+dealType);
-                this.setResult(ReturnUtil.REQUEST_METHOD_NO_AUTH,errDataSet);
+                HashMap<String, Object> errDataSet = new HashMap<String, Object>();
+                errDataSet.put("errorDetail", "服务调用者没有此操作权限，操作功能：" + module + "=>" + executor + "=>" + dealType);
+                this.setResult(ReturnUtil.REQUEST_METHOD_NO_AUTH, errDataSet);
                 handleResponseHeader(response, request.getHeader("referer"));
                 return this.getResult();
             }
@@ -488,10 +499,10 @@ public class MainController {
         /*-------------------------获取执行者bean -----------------------------+*/
         ServiceInterface si;
         try {
-            si= (ServiceInterface)context.getBean(executor);
+            si = (ServiceInterface) context.getBean(executor);
         } catch (NoSuchBeanDefinitionException e) {
-            HashMap<String,Object> errDataSet=new HashMap<String,Object>();
-            errDataSet.put("errorDetail","NoSuchBeanDefinitionException");
+            HashMap<String, Object> errDataSet = new HashMap<String, Object>();
+            errDataSet.put("errorDetail", "NoSuchBeanDefinitionException");
             this.setResult(ReturnUtil.METHOD_ERROR, errDataSet);
             handleResponseHeader(response, request.getHeader("referer"));
             return this.getResult();
@@ -504,20 +515,20 @@ public class MainController {
         //所有的参数都放入inpool了
         si.setinpool(this.getHmPagedata());
         if (!StringUtils.isEmpty(redirectUrl)) {
-            si.getinpool().put("redirectUrl",redirectUrl);
+            si.getinpool().put("redirectUrl", redirectUrl);
         }
         Iterator urldataIt = urldata.keySet().iterator();
-        while(urldataIt.hasNext()) {
-            String param1 = (String)urldataIt.next();
+        while (urldataIt.hasNext()) {
+            String param1 = (String) urldataIt.next();
             si.getinpool().put(param1, urldata.get(param1));
         }
         /*-------------------------执行 service bean并返回结果 -----------------------------+*/
         try {
-            if(!urldata.containsKey("deal-type")){
+            if (!urldata.containsKey("deal-type")) {
                 this.setResult(si.initface(), si.getoutpool());
-            }else if(urldata.get("deal-type").toString().startsWith("select")||urldata.get("deal-type").toString().startsWith("query")||urldata.get("deal-type").toString().startsWith("get")){
+            } else if (urldata.get("deal-type").toString().startsWith("select") || urldata.get("deal-type").toString().startsWith("query") || urldata.get("deal-type").toString().startsWith("get")) {
                 this.setResult(si.queryface(), si.getoutpool());
-            }else{
+            } else {
                 this.setResult(si.dealface(), si.getoutpool());
             }
         } catch (MyException e) {
@@ -527,9 +538,14 @@ public class MainController {
         }
 
         /*------------------------- 请求最后保存session -----------------------------+*/
-        this.setSessionContext((HashMap<String, Object>) si.getContext().get("session"),this.getAuthToken());
+        this.setSessionContext((HashMap<String, Object>) si.getContext().get("session"), this.getAuthToken());
         /*--------------------------------------------------------------------------*/
-
+        if (!StringUtils.isEmpty(si.getoutpool().get("session-invalid"))){
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                session.invalidate();
+            }
+        }
 
         if(!StringUtils.isEmpty(si.getoutpool().get("jsp"))){
             String redirecttoken = JugUtil.getLongUuid();//随机生成
@@ -555,7 +571,8 @@ public class MainController {
         }
         // 文件下载：判断业务逻辑层是否存在downLoadPath，fileName变量
         else if (!StringUtils.isEmpty(si.getoutpool().get("downLoadPath")) && !StringUtils.isEmpty(si.getoutpool().get("fileName"))) {
-            request.getRequestDispatcher(contextPath+"/"+module+"/download?dp="+ si.getoutpool().get("downLoadPath")+"&fn=" + si.getoutpool().get("fileName")).forward(request, response);
+//            request.getRequestDispatcher(contextPath+"/"+module+"/download?dp="+ si.getoutpool().get("downLoadPath")+"&fn=" + si.getoutpool().get("fileName")).forward(request, response);
+            response.sendRedirect(contextPath+"/"+module+"/download?dp="+ si.getoutpool().get("downLoadPath")+"&fn=" + si.getoutpool().get("fileName"));
             return this.getResult();
         }
         else{
@@ -565,15 +582,11 @@ public class MainController {
             handleResponseHeader(response, request.getHeader("referer"));
             request.setAttribute("authToken",this.getAuthToken());
             hmPagedata.remove("uploadFile");
-            if (StringUtils.isEmpty(redirectUrl)) {
-                return this.getResult();
-            } else {
-                if(si.getLogicView().length()>1){
-                    response.sendRedirect(si.getLogicView());
-                }else{
-                    response.sendRedirect(redirectUrl);
-                }
-
+            if(si.getLogicView().length()>1){
+                response.sendRedirect(si.getLogicView());
+            }
+            if (!StringUtils.isEmpty(redirectUrl)) {
+                response.sendRedirect(redirectUrl);
             }
             return this.getResult();
         }
