@@ -30,6 +30,7 @@ public class AppConfig {
     private String exclueLoginExecuters;
     private String runningMode;
     private String contextPath;
+    private String errorView;
 
     public String getContextPath(){return contextPath ;}
     public void setContextPath(String contextPath){this.contextPath=contextPath;}
@@ -69,5 +70,13 @@ public class AppConfig {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getErrorView() {
+        return errorView;
+    }
+
+    public void setErrorView(String errorView) {
+        this.errorView = errorView;
     }
 }

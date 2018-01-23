@@ -548,6 +548,9 @@ public class MainController {
         }
 
         if(!StringUtils.isEmpty(si.getoutpool().get("jsp"))){
+            if(appconf.getErrorView() != null ){
+                et =  appconf.getErrorView();
+            }
             String redirecttoken = JugUtil.getLongUuid();//随机生成
             HashMap param = new HashMap();
             param.put("inpool", si.getinpool());
@@ -558,6 +561,10 @@ public class MainController {
             request.getRequestDispatcher("/"+module+"/"+et+"_jsp"+"?redirecttoken="+redirecttoken).forward(request, response);
             return this.getResult();
         }else if(!StringUtils.isEmpty(si.getoutpool().get("jsp-redirect"))){
+
+            if(appconf.getErrorView() != null ){
+                et =  appconf.getErrorView();
+            }
             si.getoutpool().put("jsp",si.getoutpool().get("jsp-redirect"));
             String redirecttoken = JugUtil.getLongUuid();//随机生成
             response.sendRedirect(contextPath+"/"+module+"/"+et+"_jsp"+"?redirecttoken="+redirecttoken);

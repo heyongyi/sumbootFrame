@@ -138,6 +138,8 @@ public abstract class serviceAbstract implements ServiceInterface {
             }
             return ret;
         }catch (Exception e){
+            //异常情况清除outpool
+            this.getoutpool().clear();
             if( Integer.parseInt(appconf.getRunningMode())<2) {
                 this.getoutpool().put("errorDetail", e);
             }else{
