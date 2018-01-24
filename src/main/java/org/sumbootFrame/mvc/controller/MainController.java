@@ -546,7 +546,7 @@ public class MainController {
                 session.invalidate();
             }
         }
-
+        request.setAttribute("authToken",this.getAuthToken());
         if(!StringUtils.isEmpty(si.getoutpool().get("jsp"))){
             if(appconf.getErrorView() != null ){
                 et =  appconf.getErrorView();
@@ -587,7 +587,6 @@ public class MainController {
             handleResponseCookies(response);
             /* +------------------------- 返回跨域设置处理 -------------------------+ */
             handleResponseHeader(response, request.getHeader("referer"));
-            request.setAttribute("authToken",this.getAuthToken());
             hmPagedata.remove("uploadFile");
             if(si.getLogicView().length()>1){
                 response.sendRedirect(si.getLogicView());
