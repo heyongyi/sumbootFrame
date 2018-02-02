@@ -372,7 +372,6 @@ public class MainController {
              @RequestParam(value = "deal-type",required = false)String dealType,
              @RequestParam(value = "redirect-url", required = false) String redirectUrl)throws Exception {
 
-        this.setAuthToken(request.getAttribute("authToken") == null ? null : request.getAttribute("authToken").toString());//令牌来自Cookies,第三方统一登录
         this.setServiceTicket(serviceTicket);
         if (Integer.parseInt(appconf.getRunningMode()) < 3) {//测试阶段随机分配st 并会在后面自动复权
             this.setServiceTicket(JugUtil.getLongUuid());
@@ -392,7 +391,7 @@ public class MainController {
         String executor = getExecutor(module, et);
         if (StringUtils.isEmpty(executor)) {
             HashMap<String, Object> errDataSet = new HashMap<String, Object>();
-            errDataSet.put("Errmsg", "executor is null");
+            errDataSet.put("errorDetail", "executor is null");
             this.setResult(ReturnUtil.METHOD_ERROR, errDataSet);
             handleResponseHeader(response, request.getHeader("referer"));
             return this.getResult();
@@ -444,7 +443,7 @@ public class MainController {
                 if (request.getQueryString() != null) {
                     requestURL = appconf.getContextPath() + "/" + module + "/" + et + "?" + request.getQueryString();
                 } else {
-                    requestURL = appconf.getContextPath() + "/" + module + "/" + et;
+                    requestURL = appconf.getContextPath() + "/" + module + "/"+(et != null ? et : "");
                 }
             } else {
                 if (request.getQueryString() != null) {
@@ -514,21 +513,21 @@ public class MainController {
         si.setContext(hmContext);
         //所有的参数都放入inpool了
         si.setinpool(this.getHmPagedata());
-        if (!StringUtils.isEmpty(redirectUrl)) {
-            si.getinpool().put("redirectUrl", redirectUrl);
-        }
+
         Iterator urldataIt = urldata.keySet().iterator();
         while (urldataIt.hasNext()) {
             String param1 = (String) urldataIt.next();
             si.getinpool().put(param1, urldata.get(param1));
         }
+        /*-------------------------web 参数安全过滤 ------------------------------*/
+
         /*-------------------------执行 service bean并返回结果 -----------------------------+*/
         try {
-            if (!urldata.containsKey("deal-type")) {
+            if(dealType == null){
                 this.setResult(si.initface(), si.getoutpool());
-            } else if (urldata.get("deal-type").toString().startsWith("select") || urldata.get("deal-type").toString().startsWith("query") || urldata.get("deal-type").toString().startsWith("get")) {
+            }else if(dealType.startsWith("select")||dealType.startsWith("query")||dealType.startsWith("get")){
                 this.setResult(si.queryface(), si.getoutpool());
-            } else {
+            }else{
                 this.setResult(si.dealface(), si.getoutpool());
             }
         } catch (MyException e) {

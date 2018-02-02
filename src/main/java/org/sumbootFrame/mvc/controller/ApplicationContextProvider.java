@@ -45,7 +45,7 @@ public class ApplicationContextProvider implements ApplicationListener<ContextRe
         return cachedParam;
     }
 
-    public static void setMemcache(HashMap<String, Object> param, String memKey) {
+    private static void setMemcache(HashMap<String, Object> param, String memKey) {
         RedisDao redisDao;
         if(memKey != null){
             try {

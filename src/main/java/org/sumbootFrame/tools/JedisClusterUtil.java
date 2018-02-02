@@ -24,8 +24,11 @@ public class JedisClusterUtil {
         System.out.println("password:" + password );
 
         // 3个master 节点
-        jc = new JedisCluster(jedisClusterNodes,300,300,1,password,poolConfig);
-
+        if(password == null || password.length()<1){
+            jc = new JedisCluster(jedisClusterNodes,300,300,1,poolConfig);
+        }else{
+            jc = new JedisCluster(jedisClusterNodes,300,300,1,password,poolConfig);
+        }
         return jc;
     }
 }
