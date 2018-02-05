@@ -16,5 +16,22 @@ import java.util.Map;
 })
 @Component
 public class SecurityConfig {
-    private Map<String, String> xssMap;
+    private Map<String, String> xssShieldMap;
+    private Map<String, String> xssShiftMap;
+
+    public Map<String, String> getXssShieldMap() {
+        return xssShieldMap;
+    }
+
+    public void setXssShieldMap(Map<String, String> xssShieldMap) {
+        this.xssShieldMap = xssShieldMap;
+    }
+
+    public Map<String, String> getXssShiftMap() {
+        return xssShiftMap;
+    }
+
+    public void setXssShiftMap(Map<String, String> xssShiftMap) {
+        this.xssShiftMap = xssShiftMap;
+    }
 }

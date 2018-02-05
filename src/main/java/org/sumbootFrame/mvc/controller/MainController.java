@@ -53,7 +53,8 @@ public class MainController {
     ViewsConfig viewsconf;
     @Autowired
     AuthorityConfig authorityConfig;
-
+    @Autowired
+    SecurityConfig securityConfig;
     private String authToken;
     private String serviceTicket;
     private HashMap<String, Object> cookies;
@@ -177,9 +178,9 @@ public class MainController {
                 }
             }
         }
-        urlParam.put("remote-ip", getIpAddress(request));
-        urlParam.put("url", request.getRequestURL());
-        urlParam.put("referer", request.getHeader("referer"));
+//        urlParam.put("remote-ip", getIpAddress(request));
+//        urlParam.put("url", request.getRequestURL());
+//        urlParam.put("referer", request.getHeader("referer"));
     }
     private HashMap<String, Object> getJsonFormData(HttpServletRequest request) throws IOException {
         HashMap<String, Object> pageData = null;
@@ -400,8 +401,8 @@ public class MainController {
         handleCookies(request);
         /*-------------------------初始化请求路径通用参------------------------+*/
 //      urldata.put("authToken", this.getAuthToken());
-        urldata.put("module", module);
-        urldata.put("executor", et);
+//        urldata.put("module", module);
+//        urldata.put("executor", et);
 
         /* +------------------------- 处理请求路径url参数 ----------------------------+ */
         handleRequestUrl(request, urldata);
@@ -516,11 +517,41 @@ public class MainController {
 
         Iterator urldataIt = urldata.keySet().iterator();
         while (urldataIt.hasNext()) {
-            String param1 = (String) urldataIt.next();
-            si.getinpool().put(param1, urldata.get(param1));
+            String paramKey = (String) urldataIt.next();
+            String paramVal = (String)urldata.get(paramKey);
+            for(String key:securityConfig.getXssShieldMap().keySet()){
+                paramKey.replaceAll(securityConfig.getXssShieldMap().get(key),"");
+                paramVal.replaceAll(securityConfig.getXssShieldMap().get(key),"");
+            }
+            for(String key:securityConfig.getXssShiftMap().keySet()){
+                paramKey.replaceAll(key,securityConfig.getXssShiftMap().get(key));
+                paramVal.replaceAll(key,securityConfig.getXssShiftMap().get(key));
+            }
+            si.getinpool().put(paramKey, paramVal);
         }
         /*-------------------------web 参数安全过滤 ------------------------------*/
-
+//        HashMap<String,Object> pool = si.getinpool();
+//
+//        Iterator securitydataIt = pool.keySet().iterator();
+//        while(securitydataIt.hasNext()){
+//            String paramKey = (String)securitydataIt.next();
+//            String originalParam = paramKey;
+//            for(String key:securityConfig.getXssShieldMap().keySet()){
+//                paramKey.replaceAll(securityConfig.getXssShieldMap().get(key),"");
+//                if(pool.get(paramKey).getClass().equals(String.class)){
+//                    pool.get(paramKey).toString().replaceAll(securityConfig.getXssShieldMap().get(key),"");
+//                }
+//            }
+//            for(String key:securityConfig.getXssShiftMap().keySet()){
+//                paramKey.replaceAll(key,securityConfig.getXssShiftMap().get(key));
+//                if(pool.get(paramKey).getClass().equals(String.class)){
+//                    pool.get(paramKey).toString().replaceAll(key,securityConfig.getXssShiftMap().get(key));
+//                }
+//            }
+//            pool.put(paramKey,pool.get(paramKey));
+//            pool.remove(originalParam);
+//        }
+//        si.setinpool(pool);
         /*-------------------------执行 service bean并返回结果 -----------------------------+*/
         try {
             if(dealType == null){

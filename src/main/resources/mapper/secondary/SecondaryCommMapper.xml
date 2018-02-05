@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.sumbootFrame.data.dao.primary.common.PrimaryCommDAO">
+
+	<select id="getSysdate" parameterType="String" resultType="String">
+		${sysdateSql}
+	</select>
+
+    <!--执行自定义sql-->
+    <select id="executeSql" parameterType="String" resultType="HashMap">
+        ${sql}
+    </select>
+
+
+	<!-- select CONCAT("<if test=""",column_name," != null""> AND ",column_name," 
+		= #{",column_name,"} </if>") from information_schema.columns where table_name='t_m_menus'; -->
+	
+	<!-- 
+	SELECT CONCAT(
+	          "t.",
+	          t.column_name,
+	          " as """,
+	          concat(
+	             lower(left(initcap(t.column_name), 1)),
+	             substring(initcap(t.column_name),
+	                       2,
+	                       (length(initcap(t.column_name)) - 1))),
+	          """,")
+	  FROM information_schema.columns t
+	 WHERE t.table_name = 't_m_menus';
+	 -->
+	
+	<select id="getTables" parameterType="String" resultType="HashMap">
+		SELECT t.table_name AS table_name
+		  FROM information_schema.TABLES t
+		 WHERE t.TABLE_SCHEMA = #{leafdb};
+	</select>
+	
+	<select id="getColumns" parameterType="String" resultType="HashMap">
+		SELECT t.COLUMN_NAME AS column_name,
+		       t.COLUMN_COMMENT AS column_comment
+		  FROM information_schema.COLUMNS t
+		 WHERE t.TABLE_NAME = #{tableName} 
+		 	AND TABLE_SCHEMA = #{schema}
+		ORDER BY ORDINAL_POSITION;
+	</select>
+
+</mapper>
