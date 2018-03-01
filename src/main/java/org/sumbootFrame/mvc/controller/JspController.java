@@ -88,7 +88,7 @@ public class JspController {
         return header;
     }
     public void setResult(ReturnUtil retinfo, HashMap dataSet) {
-        this.getHeader().put("appName",appconf.getName());
+        this.getHeader().put("appName",appconf.getModuleName());
         this.getHeader().put("stateCode",retinfo.getStateCode());
         this.getHeader().put("stateMsg",retinfo.getStateDetail().length()>0?retinfo.getStateDetail():retinfo.getStateMsg());
         this.getHeader().put("success",retinfo.getStateCode().equals(ReturnUtil.SUCCESS.getStateCode()));
@@ -97,8 +97,8 @@ public class JspController {
     }
     private String getExecutor(String module) {
         String executor;
-        if(module != null && viewsconf.getUrlRouteDefault().containsKey(module)){
-            executor = (String) viewsconf.getUrlRouteDefault().get(module);
+        if(module != null && module.equals(appconf.getModuleName())){
+            executor = (String) viewsconf.getUrlRouteDefault();
         }else{
             executor = null;
         }

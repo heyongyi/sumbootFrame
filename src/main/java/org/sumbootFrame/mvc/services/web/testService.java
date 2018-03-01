@@ -1,4 +1,4 @@
-package org.sumbootFrame.mvc.services.test;
+package org.sumbootFrame.mvc.services.web;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -34,6 +34,7 @@ public class testService extends serviceAbstract {
 
     @Override
     public ReturnUtil execute() throws Exception {
-        return null;
+        this.getoutpool().put("jsp","hello");
+        return RETURN.SUCCESS;
     }
 }

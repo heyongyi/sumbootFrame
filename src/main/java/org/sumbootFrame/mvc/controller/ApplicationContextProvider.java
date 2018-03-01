@@ -3,14 +3,15 @@ package org.sumbootFrame.mvc.controller;
 /**
  * Created by thinkpad on 2016/12/12.
  */
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.sun.tools.internal.xjc.reader.xmlschema.bindinfo.BIConversion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Service;
 import org.sumbootFrame.data.mao.RedisDao;
+import org.sumbootFrame.tools.PackageUtil;
 import org.sumbootFrame.tools.config.*;
 import org.sumbootFrame.tools.mq.PubClientUtil;
 
@@ -68,6 +69,13 @@ public class ApplicationContextProvider implements ApplicationListener<ContextRe
         if(messagetxid == null){
             messagetxid = pubSubConfig.getMessagetxid();
         }
+        /*************************遍历rpc目录下所有类名***************************************/
+        HashMap<String,Object> clazztopath = new HashMap<>();
+        List<String> rpcclazz = PackageUtil.getClassName("org.sumbootFrame.mvc.services.rpc");
+        for(String clazz:rpcclazz){
+            clazztopath.put(clazz.split(".")[clazz.split(".").length-1],clazz);
+        }
+        setMemcache(clazztopath,"clazztopath");
         appConfigStatic = appconf;
         if(pubSubConfig.getInterval()>0){
             PubThread pubThread = new PubThread();
@@ -92,17 +100,15 @@ public class ApplicationContextProvider implements ApplicationListener<ContextRe
 
                 JsonObject msg = new JsonObject();
 
-                msg.addProperty("appName",appconf.getName());
+                msg.addProperty("appName",appconf.getModuleName());
                 msg.addProperty("runMode",appconf.getRunningMode());
-                for(String key:viewsConfig.getUrlRouteDefault().keySet()){
-                    msg.addProperty("module",key);
-                }
-                String executor = "";
+                JsonArray executors = new JsonArray();
                 for(String key:viewsConfig.getUrlRoute().keySet()){
-                    executor+=key+"^";
+                    JsonObject executor = new JsonObject();
+                    executor.addProperty("executor",key);
+                    executors.add(executor);
                 }
-                msg.addProperty("executor",executor);
-
+                msg.add("executor",executors);
 
                 String message = msg.toString();
                 pubClient.pub(channel, message);

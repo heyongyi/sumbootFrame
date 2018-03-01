@@ -16,17 +16,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class AppConfig {
 
-    private String name ;
+    private String moduleName ;
     private String tokenName;
     private String sessionChannel;
     private String cacheChanel;
     private long sessionTimeout;
     private long cacheTimeout;
-    private String sysdateSql;
     private int pageSize;
-    private String exclueModules;
+    private boolean exclueModules;
     private String exclueExecuters;
-    private String exclueLoginModules;
+    private boolean exclueLoginModules;
     private String exclueLoginExecuters;
     private String runningMode;
     private String contextPath;
@@ -35,30 +34,23 @@ public class AppConfig {
     public String getContextPath(){return contextPath ;}
     public void setContextPath(String contextPath){this.contextPath=contextPath;}
 
-    public String getName(){return name ;}
 
-    public String getTokenName(){return name+"Token";}
-    public String getSessionChannel(){return name+"Session";}
-    public String getCacheChanel(){return name+"Cache";}
+    public String getTokenName(){return moduleName+"Token";}
+    public String getSessionChannel(){return moduleName+"Session";}
+    public String getCacheChanel(){return moduleName+"Cache";}
 
     public long getSessionTimeout(){return sessionTimeout;}
     public void setSessionTimeout(long sessionTimeout){this.sessionTimeout = sessionTimeout;}
     public long getCacheTimeout(){return cacheTimeout;}
     public void setCacheTimeout(long requestCacheTimeout){this.cacheTimeout=requestCacheTimeout;}
 
-    public String getSysdateSql(){return sysdateSql;}
-    public void setSysdateSql(String sysdateSql){this.sysdateSql = sysdateSql;}
     public int getPageSize(){return pageSize;}
     public void setPageSize(int pageSize){
         this.pageSize=pageSize;
     }
-    public String getExclueModules(){return exclueModules;}
-    public void setExclueModules(String exclueModules){this.exclueModules = exclueModules;}
+
     public String getExclueExecuters(){return exclueExecuters;}
     public void setExclueExecuters(String exclueExecuters){this.exclueExecuters = exclueExecuters;}
-
-    public String getExclueLoginModules(){return exclueLoginModules;}
-    public void setExclueLoginModules(String exclueLoginModules){this.exclueLoginModules = exclueLoginModules;}
 
 
     public String getExclueLoginExecuters(){return exclueLoginExecuters;}
@@ -68,9 +60,6 @@ public class AppConfig {
     public String getRunningMode(){return runningMode;}
     public void setRunningMode(String runningMode){this.runningMode = runningMode;}
 
-    public void setName(String name) {
-        this.name = name;
-    }
 
     public String getErrorView() {
         return errorView;
@@ -78,5 +67,29 @@ public class AppConfig {
 
     public void setErrorView(String errorView) {
         this.errorView = errorView;
+    }
+
+    public boolean getExclueModules() {
+        return exclueModules;
+    }
+
+    public void setExclueModules(boolean exclueModules) {
+        this.exclueModules = exclueModules;
+    }
+
+    public boolean getExclueLoginModules() {
+        return exclueLoginModules;
+    }
+
+    public void setExclueLoginModules(boolean exclueLoginModules) {
+        this.exclueLoginModules = exclueLoginModules;
+    }
+
+    public String getModuleName() {
+        return moduleName;
+    }
+
+    public void setModuleName(String moduleName) {
+        this.moduleName = moduleName;
     }
 }

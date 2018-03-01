@@ -13,13 +13,12 @@ import java.util.Map;
 //@Configuration
 @ConfigurationProperties(prefix = "sum.views")
 @PropertySource({
-        "classpath:properties/sum.properties",
         "classpath:self-properties/sum-self.properties"
 })
 @Component
 public class ViewsConfig {
     private Map<String, String> urlRoute;
-    private Map<String, String> urlRouteDefault;
+    private String urlRouteDefault;
 
     public Map<String, String> getUrlRoute(){
         return urlRoute;
@@ -27,10 +26,11 @@ public class ViewsConfig {
     public void setUrlRoute(Map<String, String> urlRoute){
         this.urlRoute = urlRoute;
     }
-    public Map<String, String> getUrlRouteDefault(){
+
+    public String getUrlRouteDefault(){
         return urlRouteDefault;
     }
-    public void setUrlRouteDefault(Map<String, String> urlRouteDefault){
+    public void setUrlRouteDefault(String urlRouteDefault){
         this.urlRouteDefault = urlRouteDefault;
     }
 }

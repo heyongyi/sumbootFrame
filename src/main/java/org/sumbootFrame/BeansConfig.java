@@ -2,6 +2,7 @@ package org.sumbootFrame;
 
 import com.google.code.kaptcha.impl.DefaultKaptcha;
 import com.google.code.kaptcha.util.Config;
+import com.rpc.netty.server.DefaultServer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -37,5 +38,10 @@ public class BeansConfig {
         defaultKaptcha.setConfig(config);
 
         return defaultKaptcha;
+    }
+
+    @Bean
+    public DefaultServer defaultServer() {
+        return new DefaultServer();
     }
 }

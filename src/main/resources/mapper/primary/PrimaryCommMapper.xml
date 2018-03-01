@@ -2,7 +2,7 @@
 <!DOCTYPE mapper
  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="org.sumbootFrame.data.dao.primary.common.PrimaryCommDAO">
+<mapper namespace="org.sumbootFrame.data.dao.primary.PrimaryCommDAO">
 
 	<select id="getSysdate" parameterType="String" resultType="String">
 		${sysdateSql}
@@ -46,5 +46,24 @@
 		 	AND TABLE_SCHEMA = #{schema}
 		ORDER BY ORDINAL_POSITION;
 	</select>
+	<insert id="insertuser" parameterType="java.util.HashMap" >
 
+		insert into t_user
+		(id,
+		name,
+		sex,
+		age,
+		tel,
+		address
+		)
+		values
+		(
+		#{id},
+		#{name},
+		#{sex},
+		#{age},
+		#{tel},
+		#{address}
+		)
+	</insert>
 </mapper>

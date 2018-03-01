@@ -79,7 +79,7 @@ public class MainController {
         return header;
     }
     public void setResult(ReturnUtil retinfo, HashMap dataSet) {
-        this.getHeader().put("appName",appconf.getName());
+        this.getHeader().put("appName",appconf.getModuleName());
         this.getHeader().put("stateCode",retinfo.getStateCode());
         this.getHeader().put("stateMsg",retinfo.getStateDetail().length()>0?retinfo.getStateDetail():retinfo.getStateMsg());
         this.getHeader().put("success",retinfo.getStateCode().equals(ReturnUtil.SUCCESS.getStateCode()));
@@ -176,6 +176,7 @@ public class MainController {
                         urlParam.put(key, value);
                     }
                 }
+
             }
         }
 //        urlParam.put("remote-ip", getIpAddress(request));
@@ -246,9 +247,9 @@ public class MainController {
         }
     }
     private boolean isNeedSessionLimitCheck(String module, String executor) {
-        String[] exclueModules = appconf.getExclueModules().split(",");
+        boolean exclueModules = appconf.getExclueModules();
         String[] exclueExecuters = appconf.getExclueExecuters().split(",");
-        if (Arrays.asList(exclueModules).contains(module)) {
+        if (module.equals(appconf.getModuleName()) && exclueModules) {
             return false;
         }
         if (Arrays.asList(exclueExecuters).contains(executor)) {
@@ -257,9 +258,9 @@ public class MainController {
         return true;
     }
     private boolean isNeedSessionLoginCheck(String module, String executor) {
-        String[] exclueModules = appconf.getExclueLoginModules().split(",");
+        boolean exclueModules = appconf.getExclueLoginModules();
         String[] exclueExecuters = appconf.getExclueLoginExecuters().split(",");
-        if (Arrays.asList(exclueModules).contains(module)) {
+        if (module.equals(appconf.getModuleName()) && exclueModules ) {
             return false;
         }
         if (Arrays.asList(exclueExecuters).contains(executor)) {
@@ -269,9 +270,9 @@ public class MainController {
     }
     private String getExecutor(String module, String et) {
         String executor;
-        if (StringUtils.isEmpty(et)) {
-            executor = (String) viewsconf.getUrlRouteDefault().get(module);
-        } else if(!StringUtils.isEmpty(et) && viewsconf.getUrlRouteDefault().containsKey(module)){
+        if (StringUtils.isEmpty(et) && module.equals(appconf.getModuleName())) {
+            executor = (String) viewsconf.getUrlRouteDefault();
+        } else if(!StringUtils.isEmpty(et) && module.equals(appconf.getModuleName())){
             executor = (String) viewsconf.getUrlRoute().get(et);
         }else{
             executor = null;
@@ -289,7 +290,7 @@ public class MainController {
                         this.setAuthToken(cookie.getValue());
                     }
                 }
-                if (cookie.getName().equals("st")) {
+                if (cookie.getName().equals(appconf.getModuleName()+"st")) {
                     if (StringUtils.isEmpty(this.getServiceTicket())) {
                         this.setServiceTicket(cookie.getValue());
                     }
@@ -298,8 +299,10 @@ public class MainController {
         }
         if(StringUtils.isEmpty(this.getAuthToken())){
             this.setAuthToken(JugUtil.getLongUuid());
+            cookies.put(appconf.getTokenName(),this.getAuthToken());
         }
-        cookies.put(appconf.getTokenName(),this.getAuthToken());
+
+
         this.setCookies(cookies);
     }
     private void handleResponseCookies(HttpServletResponse response) {//响应中返回cookies
@@ -400,12 +403,11 @@ public class MainController {
         /* +------------------------- 获取cookies参数 -------------------------+ */
         handleCookies(request);
         /*-------------------------初始化请求路径通用参------------------------+*/
-//      urldata.put("authToken", this.getAuthToken());
-//        urldata.put("module", module);
-//        urldata.put("executor", et);
-
+        urldata.put("authToken", this.getAuthToken());
+        urldata.put("executor", executor);
         /* +------------------------- 处理请求路径url参数 ----------------------------+ */
         handleRequestUrl(request, urldata);
+
         try {
         /* +-------------------------处理请求体中的json数据-------------------+ */
             if (request.getHeader("Content-Type") != null && request.getHeader("Content-Type").contains("application/json")) {
@@ -520,38 +522,16 @@ public class MainController {
             String paramKey = (String) urldataIt.next();
             String paramVal = (String)urldata.get(paramKey);
             for(String key:securityConfig.getXssShieldMap().keySet()){
-                paramKey.replaceAll(securityConfig.getXssShieldMap().get(key),"");
-                paramVal.replaceAll(securityConfig.getXssShieldMap().get(key),"");
+                String securityParam = securityConfig.getXssShieldMap().get(key);
+                paramKey = paramKey.replaceAll(securityParam,"");
+                paramVal = paramVal.replaceAll(securityParam,"");
             }
             for(String key:securityConfig.getXssShiftMap().keySet()){
-                paramKey.replaceAll(key,securityConfig.getXssShiftMap().get(key));
-                paramVal.replaceAll(key,securityConfig.getXssShiftMap().get(key));
+                paramKey = paramKey.replaceAll(key,securityConfig.getXssShiftMap().get(key));
+                paramVal = paramVal.replaceAll(key,securityConfig.getXssShiftMap().get(key));
             }
             si.getinpool().put(paramKey, paramVal);
         }
-        /*-------------------------web 参数安全过滤 ------------------------------*/
-//        HashMap<String,Object> pool = si.getinpool();
-//
-//        Iterator securitydataIt = pool.keySet().iterator();
-//        while(securitydataIt.hasNext()){
-//            String paramKey = (String)securitydataIt.next();
-//            String originalParam = paramKey;
-//            for(String key:securityConfig.getXssShieldMap().keySet()){
-//                paramKey.replaceAll(securityConfig.getXssShieldMap().get(key),"");
-//                if(pool.get(paramKey).getClass().equals(String.class)){
-//                    pool.get(paramKey).toString().replaceAll(securityConfig.getXssShieldMap().get(key),"");
-//                }
-//            }
-//            for(String key:securityConfig.getXssShiftMap().keySet()){
-//                paramKey.replaceAll(key,securityConfig.getXssShiftMap().get(key));
-//                if(pool.get(paramKey).getClass().equals(String.class)){
-//                    pool.get(paramKey).toString().replaceAll(key,securityConfig.getXssShiftMap().get(key));
-//                }
-//            }
-//            pool.put(paramKey,pool.get(paramKey));
-//            pool.remove(originalParam);
-//        }
-//        si.setinpool(pool);
         /*-------------------------执行 service bean并返回结果 -----------------------------+*/
         try {
             if(dealType == null){
@@ -563,12 +543,14 @@ public class MainController {
             }
         } catch (MyException e) {
             this.setResult(e.getRet(), si.getoutpool());
-            handleResponseHeader(response, request.getHeader("referer"));
-            return this.getResult();
+            if(!si.getoutpool().containsKey("jsp") && !si.getoutpool().containsKey("jsp-redirect")){
+                handleResponseHeader(response, request.getHeader("referer"));
+                return this.getResult();
+            }
         }
 
-        /*------------------------- 请求最后保存session -----------------------------+*/
-        this.setSessionContext((HashMap<String, Object>) si.getContext().get("session"), this.getAuthToken());
+        /*-------------------------请求最后保存session -----------------------------+*/
+        this.setSessionContext((HashMap<String, Object>) si.getContext().get("session"),this.getAuthToken());
         /*--------------------------------------------------------------------------*/
         if (!StringUtils.isEmpty(si.getoutpool().get("session-invalid"))){
             HttpSession session = request.getSession(false);
@@ -578,7 +560,8 @@ public class MainController {
         }
         request.setAttribute("authToken",this.getAuthToken());
         if(!StringUtils.isEmpty(si.getoutpool().get("jsp"))){
-            if(appconf.getErrorView() != null ){
+            if(this.getResult().containsKey("dataHead") && this.getHeader().containsKey("success")
+                    && this.getHeader().get("success").equals(false) && appconf.getErrorView() != null ){
                 et =  appconf.getErrorView();
             }
             String redirecttoken = JugUtil.getLongUuid();//随机生成
@@ -589,10 +572,10 @@ public class MainController {
             param.put("cookies", this.getCookies());
             this.setRedirectCache(param, redirecttoken);
             request.getRequestDispatcher("/"+module+"/"+et+"_jsp"+"?redirecttoken="+redirecttoken).forward(request, response);
-            return this.getResult();
+            return null;
         }else if(!StringUtils.isEmpty(si.getoutpool().get("jsp-redirect"))){
-
-            if(appconf.getErrorView() != null ){
+            if(this.getResult().containsKey("dataHead") && this.getHeader().containsKey("success")
+                && this.getHeader().get("success").equals(false) && appconf.getErrorView() != null ){
                 et =  appconf.getErrorView();
             }
             si.getoutpool().put("jsp",si.getoutpool().get("jsp-redirect"));
@@ -608,9 +591,9 @@ public class MainController {
         }
         // 文件下载：判断业务逻辑层是否存在downLoadPath，fileName变量
         else if (!StringUtils.isEmpty(si.getoutpool().get("downLoadPath")) && !StringUtils.isEmpty(si.getoutpool().get("fileName"))) {
-//            request.getRequestDispatcher(contextPath+"/"+module+"/download?dp="+ si.getoutpool().get("downLoadPath")+"&fn=" + si.getoutpool().get("fileName")).forward(request, response);
-            response.sendRedirect(contextPath+"/"+module+"/download?dp="+ si.getoutpool().get("downLoadPath")+"&fn=" + si.getoutpool().get("fileName"));
-            return this.getResult();
+            request.getRequestDispatcher(contextPath+"/"+module+"/download?dp="+ si.getoutpool().get("downLoadPath")+"&fn=" + si.getoutpool().get("fileName")).forward(request, response);
+//            response.sendRedirect(contextPath+"/"+module+"/download?dp="+ si.getoutpool().get("downLoadPath")+"&fn=" + si.getoutpool().get("fileName"));
+            return null;
         }
         else{
             /* +------------------------- 返回cookies处理 -------------------------+ */
@@ -621,7 +604,7 @@ public class MainController {
             if(si.getLogicView().length()>1){
                 response.sendRedirect(si.getLogicView());
             }
-            if (!StringUtils.isEmpty(redirectUrl)) {
+            else if (!StringUtils.isEmpty(redirectUrl)) {
                 response.sendRedirect(redirectUrl);
             }
             return this.getResult();

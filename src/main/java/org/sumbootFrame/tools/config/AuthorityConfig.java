@@ -16,15 +16,16 @@ import java.util.Map;
 })
 @Component
 public class AuthorityConfig {
-    private Map<String, String> sessionObj;
+
     private String sessionObjName;
+    private String sessionObjIdentifyName;
+    private String sessionObjRoleName;
+    private String sessionObjLimitName;
+    private String sessionObjDetailName;
     private String captchaKey;
     private String loginPage;
 
-    public Map<String, String> getSessionObj(){
-        return sessionObj;
-    }
-    public void setSessionObj(Map<String, String> sessionObj){this.sessionObj = sessionObj;}
+
     public String getSessionObjName(){
         return sessionObjName;
     }
@@ -36,4 +37,36 @@ public class AuthorityConfig {
 
     public String getLoginPage(){return loginPage;}
     public void setLoginPage(String loginPage){this.loginPage = loginPage;}
+
+    public String getSessionObjDetailName() {
+        return sessionObjDetailName;
+    }
+
+    public void setSessionObjDetailName(String sessionObjDetailName) {
+        this.sessionObjDetailName = sessionObjDetailName;
+    }
+
+    public String getSessionObjLimitName() {
+        return sessionObjLimitName;
+    }
+
+    public void setSessionObjLimitName(String sessionObjLimitName) {
+        this.sessionObjLimitName = sessionObjLimitName;
+    }
+
+    public String getSessionObjRoleName() {
+        return sessionObjRoleName;
+    }
+
+    public void setSessionObjRoleName(String sessionObjRoleName) {
+        this.sessionObjRoleName = sessionObjRoleName;
+    }
+
+    public String getSessionObjIdentifyName() {
+        return sessionObjIdentifyName;
+    }
+
+    public void setSessionObjIdentifyName(String sessionObjIdentifyName) {
+        this.sessionObjIdentifyName = sessionObjIdentifyName;
+    }
 }
