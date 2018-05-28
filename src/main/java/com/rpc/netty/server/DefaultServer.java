@@ -6,6 +6,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -29,6 +30,8 @@ public class DefaultServer {
                 .channel(NioServerSocketChannel.class)
                 .childHandler(new DefaultServerInitializer(channelGroup))
                 .option(ChannelOption.SO_BACKLOG, 128)
+                .option(ChannelOption.SO_REUSEADDR, true)
+                .option(ChannelOption.SO_RCVBUF, 10 * 1024)
                 .childOption(ChannelOption.SO_KEEPALIVE, true);
 
         ChannelFuture future = bootstrap.bind(address).syncUninterruptibly();
@@ -41,7 +44,6 @@ public class DefaultServer {
         if(channel != null) {
             channel.close();
         }
-
         channelGroup.close();
         workGroup.shutdownGracefully();
         bossGroup.shutdownGracefully();

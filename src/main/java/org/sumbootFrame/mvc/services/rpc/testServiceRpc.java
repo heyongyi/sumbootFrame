@@ -28,7 +28,7 @@ public class testServiceRpc extends serviceRpcAbstract {
         for(String key:this.getinpool().keySet()){
             this.getoutpool().put(key,this.getinpool().get(key));
         }
-
+        this.getoutpool().put("fromto","testservice->testServiceRpc");
         return RETURN.SUCCESS;
     }
 
@@ -46,4 +46,5 @@ public class testServiceRpc extends serviceRpcAbstract {
         primaryCommDAO.insertuser(user);
         return RETURN.SUCCESS;
     }
+
 }

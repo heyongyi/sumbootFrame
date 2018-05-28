@@ -5,6 +5,7 @@ package org.sumbootFrame.mvc.controller;
  */
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -20,6 +21,8 @@ import java.util.List;
 
 @Service
 public class ApplicationContextProvider implements ApplicationListener<ContextRefreshedEvent> {
+    protected static final org.slf4j.Logger logger = LoggerFactory.getLogger(ApplicationContextProvider.class);
+
     private static ApplicationContext applicationContext = null;
     private static String subscriberCenter = null;
     private static String messagetxid = null;
@@ -69,14 +72,15 @@ public class ApplicationContextProvider implements ApplicationListener<ContextRe
         if(messagetxid == null){
             messagetxid = pubSubConfig.getMessagetxid();
         }
+        appConfigStatic = appconf;
         /*************************遍历rpc目录下所有类名***************************************/
         HashMap<String,Object> clazztopath = new HashMap<>();
         List<String> rpcclazz = PackageUtil.getClassName("org.sumbootFrame.mvc.services.rpc");
         for(String clazz:rpcclazz){
-            clazztopath.put(clazz.split(".")[clazz.split(".").length-1],clazz);
+            clazztopath.put(clazz.split("\\.")[clazz.split("\\.").length-1],clazz);
         }
-        setMemcache(clazztopath,"clazztopath");
-        appConfigStatic = appconf;
+        setMemcache(clazztopath,"RpcServiceFactory");
+
         if(pubSubConfig.getInterval()>0){
             PubThread pubThread = new PubThread();
             pubThread.setDaemon(true);

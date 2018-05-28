@@ -29,4 +29,5 @@ public class RETURN {
     public static ReturnUtil SES_TIME_OUT = new ReturnUtil("10005", "请先登录");
     public static ReturnUtil IDENTIFY_ERROR = new ReturnUtil("10006", "身份信息错误");
     public static ReturnUtil LOSE_PARAM = new ReturnUtil("10007", "缺少参数");
+    public static ReturnUtil EXTDEAL_NO_SUCCESS  = new ReturnUtil("10517", "调用外部接口，操作失败");
 }

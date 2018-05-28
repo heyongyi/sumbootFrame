@@ -1,17 +1,19 @@
 package org.sumbootFrame.mvc.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.ibatis.session.SqlSession;
 import org.slf4j.LoggerFactory;
+import org.sumbootFrame.mvc.interfaces.IDao;
 import org.sumbootFrame.mvc.interfaces.ServiceRpcInterface;
 import org.sumbootFrame.tools.DBTools;
+import org.sumbootFrame.tools.JedisClusterUtil;
 import org.sumbootFrame.tools.ReturnUtil;
 import org.sumbootFrame.tools.exception.MyException;
+import redis.clients.jedis.JedisCluster;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by thinkpad on 2018/2/26.
@@ -23,16 +25,13 @@ public abstract class serviceRpcAbstract implements ServiceRpcInterface {
     private int pageNum = 1;//分页
     private HashMap<String, Object> context;
     protected static final HashMap<String,Object> appconf = makePropertyConfig("sum.app");
-    private SqlSession daoFactory = DBTools.getSession();;
 
+    private SqlSession daoFactory = DBTools.getSession();
     /*******************************服务层调用函数**********************************/
     public abstract ReturnUtil init() throws Exception;
     public abstract ReturnUtil query() throws Exception;
     public abstract ReturnUtil execute() throws Exception;
-    public HashMap<String, Object> getSession() {
-        HashMap<String, Object> session = (HashMap<String, Object>) this.getContext().get("session");
-        return session;
-    }
+
     public HashMap<String, Object> getCookies() {
         HashMap<String, Object> cookies = (HashMap<String, Object>) this.getContext().get("cookies");
         return cookies;
@@ -196,14 +195,12 @@ public abstract class serviceRpcAbstract implements ServiceRpcInterface {
         if(type.equals("begin")){
             logger.info("########################[BEGIN:" + this.getOperatorStr() + "]##########################");
             logger.debug("Cookies:" + this.getCookies());
-            logger.debug("Session:" + this.getSession());
             logger.debug("InParam:" + this.getinpool());
             logger.debug("+--------------------------------------------------------------------------+");
         }
         else if(type.equals("end")){
             logger.debug("+--------------------------------------------------------------------------+");
             logger.debug("Cookies:" + this.getCookies());
-            logger.debug("Session:" + this.getSession());
             logger.debug("OutParam:" + this.getoutpool());
             logger.info("########################[END  :" + this.getOperatorStr() + "]##########################");
         }
@@ -211,7 +208,6 @@ public abstract class serviceRpcAbstract implements ServiceRpcInterface {
             //to do
         }
     }
-
     public SqlSession getDaoFactory() {
         return daoFactory;
     }
