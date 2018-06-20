@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.sumbootFrame</groupId>
-	<artifactId>sum-frame</artifactId>
+	<artifactId>sum-frame-noquartz</artifactId>
 	<version>0.1.17</version>
 	<packaging>jar</packaging>
 
@@ -138,11 +138,6 @@
             <artifactId>java-uuid-generator</artifactId>
             <version>${java-uuid-generator.version}</version>
         </dependency>
-		<!--返回xml-->
-		<!--<dependency>-->
-			<!--<groupId>com.fasterxml.jackson.dataformat</groupId>-->
-			<!--<artifactId>jackson-dataformat-xml</artifactId>-->
-		<!--</dependency>-->
 		<!-- Apache Commons IO -->
 		<dependency>
 			<groupId>commons-io</groupId>
