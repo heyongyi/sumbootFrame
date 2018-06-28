@@ -355,9 +355,10 @@ public class MainController {
                                         @RequestParam(value = "upload-file", required = false) MultipartFile[] uploadFile,  // 文件上传参数
                                         @RequestParam(value = "fileName",required = false)String[] fileName,
                                         @RequestParam(value = "deal-type",required = false)String dealType,
+                                        @RequestParam(value = "token",required = false)String token,
                                         @RequestParam(value = "redirect-url", required = false) String redirectUrl)throws Exception {
 
-        return coredefault(request,response,module,executor,serviceTicket,redirectToken,uploadFile,fileName,dealType,redirectUrl);
+        return coredefault(request,response,module,executor,serviceTicket,redirectToken,uploadFile,fileName,dealType,token,redirectUrl);
     }
     @RequestMapping(value = "/{module}",method = {RequestMethod.POST, RequestMethod.GET})
     public HashMap<String, Object> coredefault
@@ -370,9 +371,13 @@ public class MainController {
              @RequestParam(value = "upload-file", required = false) MultipartFile[] uploadFile,  // 文件上传参数
              @RequestParam(value = "file-name",required = false)String[] fileName,
              @RequestParam(value = "deal-type",required = false)String dealType,
+             @RequestParam(value = "token",required = false)String token,
              @RequestParam(value = "redirect-url", required = false) String redirectUrl)throws Exception {
 
-        this.setAuthToken(request.getAttribute("authToken") == null ? null : request.getAttribute("authToken").toString());//令牌来自Cookies,第三方统一登录
+        this.setAuthToken(token);
+        if(StringUtils.isEmpty(this.getAuthToken())){
+            this.setAuthToken(request.getAttribute("authToken") == null ? null : request.getAttribute("authToken").toString());//令牌来自Cookies,第三方统一登录
+        }
         this.setServiceTicket(serviceTicket);
         if (Integer.parseInt(appconf.getRunningMode()) < 3) {//测试阶段随机分配st 并会在后面自动复权
             this.setServiceTicket(JugUtil.getLongUuid());
@@ -403,6 +408,7 @@ public class MainController {
 //      urldata.put("authToken", this.getAuthToken());
         urldata.put("module", module);
         urldata.put("executor", et);
+        urldata.put("token",this.getAuthToken());
 
         /* +------------------------- 处理请求路径url参数 ----------------------------+ */
         handleRequestUrl(request, urldata);
