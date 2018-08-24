@@ -4,6 +4,8 @@ package org.sumbootFrame.data.dao;
  * Created by thinkpad on 2017/9/22.
  */
 
+import com.alibaba.druid.pool.xa.DruidXADataSource;
+import com.mysql.jdbc.jdbc2.optional.MysqlXADataSource;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
@@ -20,6 +22,9 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
+import com.atomikos.jdbc.AtomikosDataSourceBean;
+
+
 
 @Configuration
 @PropertySource({
@@ -40,11 +45,48 @@ public class DataSource1Config {
     public DataSourceProperties primaryDataSourceProperties() {
         return new DataSourceProperties();
     }
+
     @Bean(name = "primaryDataSource")
     @ConfigurationProperties(prefix = "primary.datasource")
     @Primary
     public DataSource DataSource() {
-        return primaryDataSourceProperties().initializeDataSourceBuilder().build();
+        /**
+         * MySql数据库驱动 实现 XADataSource接口
+         */
+//        MysqlXADataSource mysqlXaDataSource = new MysqlXADataSource();
+//        mysqlXaDataSource.setUrl(primaryDataSourceProperties().getUrl());
+//        mysqlXaDataSource.setPinGlobalTxToPhysicalConnection(true);
+//        mysqlXaDataSource.setPassword(primaryDataSourceProperties().getPassword());
+//        mysqlXaDataSource.setUser(primaryDataSourceProperties().getUsername());
+//        mysqlXaDataSource.setPinGlobalTxToPhysicalConnection(true);
+
+        DruidXADataSource xaDataSource = new DruidXADataSource();
+        xaDataSource.setUrl(primaryDataSourceProperties().getUrl());
+        xaDataSource.setUsername(primaryDataSourceProperties().getUsername());
+        xaDataSource.setPassword(primaryDataSourceProperties().getPassword());
+
+
+
+        /**
+         * 设置分布式-- 主数据源
+         */
+        AtomikosDataSourceBean atomikosDataSourceBean = new AtomikosDataSourceBean();
+        atomikosDataSourceBean.setXaDataSource(xaDataSource);
+        atomikosDataSourceBean.setUniqueResourceName("PrimaryDB");
+//        atomikosDataSourceBean.setMinPoolSize();
+//        atomikosDataSourceBean.setMaxPoolSize();
+//
+//        xaDataSource.setMaxLifetime();
+//        xaDataSource.setBorrowConnectionTimeout();
+//        xaDataSource.setLoginTimeout();
+//        xaDataSource.setMaintenanceInterval();
+//        xaDataSource.setMaxIdleTime();
+//        xaDataSource.setTestQuery();
+//        xaDataSource.setXaProperties();
+        System.err.println("主数据源注入成功.....");
+        return atomikosDataSourceBean;
+
+//        return primaryDataSourceProperties().initializeDataSourceBuilder().build();
     }
 
     @Bean(name = "primarySqlSessionFactory")

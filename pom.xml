@@ -76,6 +76,15 @@
 			<groupId>org.springframework.session</groupId>
 			<artifactId>spring-session-data-redis</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jta-atomikos</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+		</dependency>
+
 		<!--test级别的jar包-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -96,26 +105,6 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-        <!--<dependency>-->
-            <!--<groupId>org.springframework.boot</groupId>-->
-            <!--<artifactId>spring-boot-starter-data-elasticsearch</artifactId>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-            <!--<groupId>org.springframework.data</groupId>-->
-            <!--<artifactId>spring-data-elasticsearch</artifactId>-->
-        <!--</dependency>-->
-        <!--非spring boot 管理的jar包-->
-		<!--<dependency>-->
-			<!--<groupId>org.elasticsearch</groupId>-->
-			<!--<artifactId>elasticsearch</artifactId>-->
-			<!--<version>${elasticsearch.version}</version>-->
-		<!--</dependency>-->
-		<!--<dependency>-->
-			<!--<groupId>org.elasticsearch.client</groupId>-->
-			<!--<artifactId>transport</artifactId>-->
-			<!--<version>${elasticsearch.version}</version>-->
-		<!--</dependency>-->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
@@ -152,7 +141,6 @@
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<scope>runtime</scope>
 		</dependency>
 		<!-- oracle驱动包 -->
 		<dependency>
@@ -239,19 +227,19 @@
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-all</artifactId>
-			<version>4.1.12.Final</version>
+			<version>5.0.0.Alpha1</version>
 		</dependency>
 		<!--diamond-->
-		<dependency>
-			<groupId>com.taobao.diamond</groupId>
-			<artifactId>diamond-client</artifactId>
-			<version>2.0.5.4.taocode-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>com.taobao.diamond</groupId>
-			<artifactId>diamond-utils</artifactId>
-			<version>2.0.5.4.taocode-SNAPSHOT</version>
-		</dependency>
+		<!--<dependency>-->
+			<!--<groupId>com.taobao.diamond</groupId>-->
+			<!--<artifactId>diamond-client</artifactId>-->
+			<!--<version>2.0.5.4.taocode-SNAPSHOT</version>-->
+		<!--</dependency>-->
+		<!--<dependency>-->
+			<!--<groupId>com.taobao.diamond</groupId>-->
+			<!--<artifactId>diamond-utils</artifactId>-->
+			<!--<version>2.0.5.4.taocode-SNAPSHOT</version>-->
+		<!--</dependency>-->
 	</dependencies>
 
 	<build>

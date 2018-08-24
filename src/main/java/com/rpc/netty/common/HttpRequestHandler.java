@@ -7,10 +7,8 @@ import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.Cookie;
 import io.netty.handler.codec.http.CookieDecoder;
-import io.netty.handler.codec.http.cookie.*;
-import io.netty.handler.codec.http.cookie.DefaultCookie;
-import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
-import io.netty.util.AsciiString;
+import io.netty.handler.codec.http.DefaultCookie;
+import io.netty.handler.codec.http.ServerCookieEncoder;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.stereotype.Component;
@@ -38,7 +36,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 	protected static final org.slf4j.Logger logger = LoggerFactory.getLogger(HttpRequestHandler.class);
-	private AsciiString contentType = HttpHeaderValues.TEXT_PLAIN;
+//	private AsciiString contentType = HttpHeaders.Values.TEXT_PLAIN;
 //    private String authToken;//登录用户唯一身份标识
     private String serviceTicket;//接口调用权限令牌
     private HashMap<String, Object> cookies;
@@ -137,17 +135,17 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         if (!cookies.isEmpty()) {
             // Reset the cookies if necessary.
             for (Cookie cookie : cookies) {
-                logger.info("cookie: " + cookie.value() +"   "+cookie.name()+ "\r\n");
-                cookieMap.put(cookie.name(), cookie.value());
+                logger.info("cookie: " + cookie.getValue() +"   "+cookie.getName()+ "\r\n");
+                cookieMap.put(cookie.getName(), cookie.getValue());
                 //从Cookies获取令牌标识,并且，url路径无令牌参数
 //                if (cookie.name().equals(appMap.get("moduleName")+"Token")) {
 //                    if (StringUtils.isEmpty(this.getAuthToken())) {
 //                        this.setAuthToken(cookie.value());
 //                    }
 //                }
-                if (cookie.name().equals(appMap.get("moduleName")+"St")) {
+                if (cookie.getName().equals(appMap.get("moduleName")+"St")) {
                     if (StringUtils.isEmpty(this.getServiceTicket())) {
-                        this.setServiceTicket(cookie.value());
+                        this.setServiceTicket(cookie.getValue());
                     }
                 }
             }
@@ -163,13 +161,13 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         for (Map.Entry<String, Object> entry : this.getCookies().entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue().toString();
-            io.netty.handler.codec.http.cookie.Cookie cookie = new DefaultCookie(key,value);
+            io.netty.handler.codec.http.Cookie cookie = new DefaultCookie(key,value);
             cookie.setDomain(cookieMap.get("domain").toString());
             cookie.setPath(cookieMap.get("path").toString());
             cookie.setHttpOnly(Boolean.parseBoolean(cookieMap.get("httpOnly").toString()));
             cookie.setMaxAge(Long.parseLong(cookieMap.get("age").toString()));
             cookie.setSecure(Boolean.parseBoolean(cookieMap.get("secure").toString()));
-            headers.add(HttpHeaderNames.SET_COOKIE, ServerCookieEncoder.STRICT.encode(cookie));
+            headers.add(HttpHeaders.Names.SET_COOKIE, ServerCookieEncoder.encode(cookie));
         }
     }
     public HashMap<String, Object> jedisRead(String prefix, final String key) {
@@ -256,8 +254,8 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         return true;
     }
     private void handleResponseHeader(DefaultFullHttpResponse response, String referer) {
-        if (referer != null && response.headers().contains(HttpHeaderNames.ORIGIN)) {
-            String[] responseHeaderOrigin = response.headers().get(HttpHeaderNames.ORIGIN).split(",");
+        if (referer != null && response.headers().contains(HttpHeaders.Names.ORIGIN)) {
+            String[] responseHeaderOrigin = response.headers().get(HttpHeaders.Names.ORIGIN).split(",");
             for (String origin : responseHeaderOrigin) {
                 //1、如果orgin配置为 http://*.hearglobal.com 校验逻辑如下
                 //2、比对请求referer 的一级域名部分是否同orgin 的一级域名部分相同。
@@ -266,26 +264,26 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                     if (referer.substring(referer.indexOf(".") + 1).startsWith(origin.substring(origin.indexOf(".") + 1))) {
                         //由于origin不支持http://*.hearglobal.com配置，所以将http://* 替换成 referer的二级域名部分。
                         origin = origin.replace(origin.substring(0, origin.indexOf(".")), referer.substring(0, referer.indexOf(".")));
-                        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
-                        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, responceMap.get("methods"));
-                        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, String.valueOf(responceMap.get("credentials")));
-                        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS, responceMap.get("headers"));
+                        response.headers().add(HttpHeaders.Names.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+                        response.headers().add(HttpHeaders.Names.ACCESS_CONTROL_ALLOW_METHODS, responceMap.get("methods"));
+                        response.headers().add(HttpHeaders.Names.ACCESS_CONTROL_ALLOW_CREDENTIALS, String.valueOf(responceMap.get("credentials")));
+                        response.headers().add(HttpHeaders.Names.ACCESS_CONTROL_ALLOW_HEADERS, responceMap.get("headers"));
                         break;
                     }
                 } else {
                     if (referer.startsWith(origin)) {
-                        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
-                        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, responceMap.get("methods"));
-                        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, String.valueOf(responceMap.get("credentials")));
-                        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS, responceMap.get("headers"));
+                        response.headers().add(HttpHeaders.Names.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+                        response.headers().add(HttpHeaders.Names.ACCESS_CONTROL_ALLOW_METHODS, responceMap.get("methods"));
+                        response.headers().add(HttpHeaders.Names.ACCESS_CONTROL_ALLOW_CREDENTIALS, String.valueOf(responceMap.get("credentials")));
+                        response.headers().add(HttpHeaders.Names.ACCESS_CONTROL_ALLOW_HEADERS, responceMap.get("headers"));
                         break;
                     }
                 }
             }
         }
-        response.headers().add(HttpHeaderNames.CONTENT_TYPE, contentType + "; charset=UTF-8");
-        response.headers().add(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes()); // 3
-        response.headers().add(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+//        response.headers().add(HttpHeaders.Names.CONTENT_TYPE, HttpHeaders.Values. + "; charset=UTF-8");
+//        response.headers().add(HttpHeaders.Names.CONTENT_LENGTH, response.content().readableBytes()); // 3
+//        response.headers().add(HttpHeaders.Names.CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
     }
 
     private void handleRequestUrl(String queryString, HashMap<String, Object> urlParam) throws UnsupportedEncodingException {
@@ -315,15 +313,15 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
 //        urlParam.put("referer", request.getHeader("referer"));
     }
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
-        if(!request.uri().contains("?") || !request.uri().contains("/")){
+	protected void messageReceived(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
+        if(!request.getUri().contains("?") || !request.getUri().contains("/")){
             HashMap<String, Object> errDataSet = new HashMap<String, Object>();
             errDataSet.put("Errmsg", "");
             this.setResult(ReturnUtil.REQUEST_METHODFORMAT_NO_SUPPORT,errDataSet);
             returnResponse(ctx,request);
             return;
         }
-		String urlPath = StringUtils.split(request.uri(),"?")[0];
+		String urlPath = StringUtils.split(request.getUri(),"?")[0];
         String module = StringUtils.split(urlPath,"/")[1].split("/")[0];
         String et = StringUtils.split(urlPath,"/")[1].split("/")[1];
         /**
@@ -341,7 +339,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         /* +------------------------- 获取cookies参数 -------------------------+ */
         handleCookies(request);
         /* +------------------------- 处理请求路径url参数 ----------------------------+ */
-        handleRequestUrl(StringUtils.split(request.uri(),"?")[1], allbody);
+        handleRequestUrl(StringUtils.split(request.getUri(),"?")[1], allbody);
 
 
         Map<String, String> parmMap = new RequestParser(request).parse(); // 将GET, POST所有请求参数转换成Map对象
@@ -407,8 +405,8 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         DefaultFullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
                 HttpResponseStatus.OK,
                 Unpooled.wrappedBuffer(PojoUtil.toJson(this.getResult()).getBytes())); // 2
-        response.headers().remove(HttpHeaderNames.CONTENT_TYPE);
-        response.headers().set(HttpHeaderNames.CONTENT_TYPE,"application/json; charset=UTF-8");
+        response.headers().remove(HttpHeaders.Names.CONTENT_TYPE);
+        response.headers().set(HttpHeaders.Names.CONTENT_TYPE,"application/json; charset=UTF-8");
         handleResponseHeader(response, request.headers().get("referer"));
         handleResponseCookies(response.headers());
         ctx.write(response);
