@@ -17,16 +17,14 @@ import java.net.InetSocketAddress;
 @EnableTransactionManagement
 @SpringBootApplication
 @ServletComponentScan
-public class DemoApplication extends SpringBootServletInitializer implements CommandLineRunner {
+//
+public class DemoApplication extends SpringBootServletInitializer implements CommandLineRunner{
 	@Autowired
 	private DefaultServer defaultServer;
 	public static void main(String[] args) {
 
 		SpringApplication.run(DemoApplication.class, args);
 
-//		SpringApplication app = new SpringApplication(DemoApplication.class);
-//		app.setWebEnvironment(false);
-//		app.run(args);
 	}
 	@Override
 	protected SpringApplicationBuilder configure(

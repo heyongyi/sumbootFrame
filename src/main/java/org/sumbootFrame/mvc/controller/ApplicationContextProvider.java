@@ -5,9 +5,9 @@ package org.sumbootFrame.mvc.controller;
  */
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.taobao.diamond.manager.DiamondManager;
-import com.taobao.diamond.manager.ManagerListener;
-import com.taobao.diamond.manager.impl.DefaultDiamondManager;
+//import com.taobao.diamond.manager.DiamondManager;
+//import com.taobao.diamond.manager.ManagerListener;
+//import com.taobao.diamond.manager.impl.DefaultDiamondManager;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -90,33 +90,33 @@ public class ApplicationContextProvider implements ApplicationListener<ContextRe
             pubThread.setDaemon(true);
             pubThread.start();
         }
-        DiamondThread diamondThread = new DiamondThread();
-        diamondThread.setDaemon(true);
-        diamondThread.start();
+//        DiamondThread diamondThread = new DiamondThread();
+//        diamondThread.setDaemon(true);
+//        diamondThread.start();
     }
-    private class DiamondThread extends Thread{
-        @Override
-        public void run() {
-            DiamondManager manager = new DefaultDiamondManager("DEFAULT_GROUP", "test", new ManagerListener() {
-                public Executor getExecutor() {
-                    return null;
-                }
-
-                public void receiveConfigInfo(String configInfo) {
-                    logger.info("configInfo:{}",configInfo);
-
-                }
-            });
-            String configInfo = manager.getAvailableConfigureInfomation(1000);
-            while (true) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
+//    private class DiamondThread extends Thread{
+//        @Override
+//        public void run() {
+//            DiamondManager manager = new DefaultDiamondManager("DEFAULT_GROUP", "test", new ManagerListener() {
+//                public Executor getExecutor() {
+//                    return null;
+//                }
+//
+//                public void receiveConfigInfo(String configInfo) {
+//                    logger.info("configInfo:{}",configInfo);
+//
+//                }
+//            });
+//            String configInfo = manager.getAvailableConfigureInfomation(1000);
+//            while (true) {
+//                try {
+//                    Thread.sleep(1000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//    }
     private class PubThread extends Thread {
         @Override
         public void run() {

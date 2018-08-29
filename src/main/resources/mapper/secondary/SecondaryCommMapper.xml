@@ -46,5 +46,24 @@
 		 	AND TABLE_SCHEMA = #{schema}
 		ORDER BY ORDINAL_POSITION;
 	</select>
+	<insert id="insertuser" parameterType="java.util.HashMap" >
 
+		insert into t_user
+		(id,
+		name,
+		sex,
+		age,
+		tel,
+		address
+		)
+		values
+		(
+		#{id},
+		#{name},
+		#{sex},
+		#{age},
+		#{tel},
+		#{address}
+		)
+	</insert>
 </mapper>

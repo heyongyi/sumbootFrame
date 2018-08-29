@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.sumbootFrame.data.dao.primary.PrimaryCommDAO;
+import org.sumbootFrame.data.dao.secondary.SecondaryCommDAO;
 import org.sumbootFrame.mvc.services.serviceAbstract;
 import org.sumbootFrame.tools.HttpClientUtil;
 import org.sumbootFrame.tools.ReturnUtil;
@@ -27,7 +28,8 @@ public class testService extends serviceAbstract {
     private SecurityConfig securityConfig;
     @Override
     public ReturnUtil init() throws Exception {
-        return null;
+        this.getoutpool().put("jsp-redirect","hello");
+        return RETURN.SUCCESS;
     }
 
     @Override
@@ -60,6 +62,7 @@ public class testService extends serviceAbstract {
     @Override
     public ReturnUtil execute() throws Exception {
         PrimaryCommDAO primaryCommDAO = (PrimaryCommDAO)this.getDaoFactory().get("primaryCommDAO");
+        SecondaryCommDAO secondaryCommDAO = (SecondaryCommDAO)this.getDaoFactory().get("secondaryCommDAO");
         HashMap<String,Object> user = new HashMap<>();
 
         user.put("name","何永毅");
@@ -69,6 +72,7 @@ public class testService extends serviceAbstract {
         user.put("address","aaaaaaaa");
 
         primaryCommDAO.insertuser(user);
-        return RETURN.SUCCESS;
+        secondaryCommDAO.insertuser(user);
+        return RETURN.CHK_ERROR;
     }
 }

@@ -1,12 +1,21 @@
 package com.rpc.netty.common;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.group.ChannelGroup;
-import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.AttributeKey;
+import io.netty.util.CharsetUtil;
 import org.apache.log4j.Logger;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by heyongyi on 2018/8/24.
@@ -86,76 +95,59 @@ public class SelfWebSocketServerHandler extends SimpleChannelInboundHandler<Obje
         TextWebSocketFrame tws = new TextWebSocketFrame(new Date().toString() + ctx.channel().id() + "：" + request);
         // 群发
         group.writeAndFlush(tws);
-// 返回【谁发的发给谁】
-// ctx.channel().writeAndFlush(tws);
+        // 返回【谁发的发给谁】
+        // ctx.channel().writeAndFlush(tws);
     }
     private void handlerWebSocketFrame2(ChannelHandlerContext ctx, WebSocketFrame frame) {
-// 判断是否关闭链路的指令
+        // 判断是否关闭链路的指令
         if (frame instanceof CloseWebSocketFrame) {
             handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
             return;
         }
-// 判断是否ping消息
+        // 判断是否ping消息
         if (frame instanceof PingWebSocketFrame) {
             ctx.channel().write(new PongWebSocketFrame(frame.content().retain()));
             return;
         }
-// 本例程仅支持文本消息，不支持二进制消息
+        // 本例程仅支持文本消息，不支持二进制消息
         if (!(frame instanceof TextWebSocketFrame)) {
             System.out.println("本例程仅支持文本消息，不支持二进制消息");
             throw new UnsupportedOperationException(
                     String.format("%s frame types not supported", frame.getClass().getName()));
         }
-// 返回应答消息
+        // 返回应答消息
         String request = ((TextWebSocketFrame) frame).text();
         System.out.println("服务端2收到：" + request);
-        if (logger.isLoggable(Level.FINE)) {
-            logger.fine(String.format("%s received %s", ctx.channel(), request));
-        }
+        logger.info(String.format("%s received %s", ctx.channel(), request));
         TextWebSocketFrame tws = new TextWebSocketFrame(new Date().toString() + ctx.channel().id() + "：" + request);
-// 群发
-        Global.group.writeAndFlush(tws);
-// 返回【谁发的发给谁】
-// ctx.channel().writeAndFlush(tws);
+        // 群发
+        group.writeAndFlush(tws);
+    // 返回【谁发的发给谁】
+    // ctx.channel().writeAndFlush(tws);
     }
     private void handleHttpRequest(ChannelHandlerContext ctx, FullHttpRequest req) {
-// 如果HTTP解码失败，返回HHTP异常
+        // 如果HTTP解码失败，返回HHTP异常
         if (!req.getDecoderResult().isSuccess() || (!"websocket".equals(req.headers().get("Upgrade")))) {
             sendHttpResponse(ctx, req,
                     new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST));
             return;
         }
-//获取url后置参数
+        //获取url后置参数
         HttpMethod method=req.getMethod();
         String uri=req.getUri();
         QueryStringDecoder queryStringDecoder = new QueryStringDecoder(uri);
         Map<String, List<String>> parameters = queryStringDecoder.parameters();
         System.out.println(parameters.get("request").get(0));
-        if(method==HttpMethod.GET&&"/webssss".equals(uri)){
-//....处理
-            ctx.attr(AttributeKey.valueOf("type")).set("anzhuo");
-        }else if(method==HttpMethod.GET&&"/websocket".equals(uri)){
-//...处理
-            ctx.attr(AttributeKey.valueOf("type")).set("live");
-        }
-// 构造握手响应返回，本机测试
-        WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(
-                "ws://"+req.headers().get(HttpHeaders.Names.HOST)+uri, null, false);
-        handshaker = wsFactory.newHandshaker(req);
-        if (handshaker == null) {
-            WebSocketServerHandshakerFactory.sendUnsupportedWebSocketVersionResponse(ctx.channel());
-        } else {
-            handshaker.handshake(ctx.channel(), req);
-        }
+
     }
     private static void sendHttpResponse(ChannelHandlerContext ctx, FullHttpRequest req, DefaultFullHttpResponse res) {
-// 返回应答给客户端
+        // 返回应答给客户端
         if (res.getStatus().code() != 200) {
             ByteBuf buf = Unpooled.copiedBuffer(res.getStatus().toString(), CharsetUtil.UTF_8);
             res.content().writeBytes(buf);
             buf.release();
         }
-// 如果是非Keep-Alive，关闭连接
+        // 如果是非Keep-Alive，关闭连接
         ChannelFuture f = ctx.channel().writeAndFlush(res);
         if (!HttpHeaders.isKeepAlive(req) || res.getStatus().code() != 200) {
             f.addListener(ChannelFutureListener.CLOSE);

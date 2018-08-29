@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -24,7 +25,12 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import javax.sql.DataSource;
 import com.atomikos.jdbc.AtomikosDataSourceBean;
 
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
+import com.atomikos.icatch.jta.UserTransactionImp;
 
 @Configuration
 @PropertySource({
@@ -43,7 +49,7 @@ public class DataSource1Config {
     @Primary
     @ConfigurationProperties("primary.datasource")
     public DataSourceProperties primaryDataSourceProperties() {
-        return new DataSourceProperties();
+        return  new DataSourceProperties();
     }
 
     @Bean(name = "primaryDataSource")
@@ -53,40 +59,46 @@ public class DataSource1Config {
         /**
          * MySql数据库驱动 实现 XADataSource接口
          */
-//        MysqlXADataSource mysqlXaDataSource = new MysqlXADataSource();
-//        mysqlXaDataSource.setUrl(primaryDataSourceProperties().getUrl());
-//        mysqlXaDataSource.setPinGlobalTxToPhysicalConnection(true);
-//        mysqlXaDataSource.setPassword(primaryDataSourceProperties().getPassword());
-//        mysqlXaDataSource.setUser(primaryDataSourceProperties().getUsername());
-//        mysqlXaDataSource.setPinGlobalTxToPhysicalConnection(true);
 
         DruidXADataSource xaDataSource = new DruidXADataSource();
         xaDataSource.setUrl(primaryDataSourceProperties().getUrl());
         xaDataSource.setUsername(primaryDataSourceProperties().getUsername());
         xaDataSource.setPassword(primaryDataSourceProperties().getPassword());
+        xaDataSource.setDriverClassName(primaryDataSourceProperties().getDriverClassName());
 
+        Map<String,String> propertiesMap = primaryDataSourceProperties().getXa().getProperties();
+        xaDataSource.setMaxActive(Integer.parseInt(propertiesMap.get("maxActive").toString()));
+        xaDataSource.setInitialSize(Integer.parseInt(propertiesMap.get("initialSize").toString()));
+        xaDataSource.setMinIdle(Integer.parseInt(propertiesMap.get("minIdle").toString()));
+        xaDataSource.setMaxWait(Integer.parseInt(propertiesMap.get("maxWait").toString()));
+        xaDataSource.setTimeBetweenEvictionRunsMillis(Integer.parseInt(propertiesMap.get("timeBetweenEvictionRunsMillis").toString()));
+//            xaDataSource.setUseUnfairLock();//非公平锁 默认不打开
 
-
+        xaDataSource.setValidationQuery(propertiesMap.get("validationQuery").toString());
+        xaDataSource.setTestOnBorrow(Boolean.valueOf(propertiesMap.get("testOnBorrow")));
+        xaDataSource.setTestOnReturn(Boolean.valueOf(propertiesMap.get("testOnReturn")));
+        xaDataSource.setPoolPreparedStatements(Boolean.valueOf(propertiesMap.get("poolPreparedStatements")));
+        xaDataSource.setMaxPoolPreparedStatementPerConnectionSize(Integer.parseInt(propertiesMap.get("maxPoolPreparedStatementPerConnectionSize").toString()));
+        try {
+            xaDataSource.setFilters(propertiesMap.get("filters").toString());
+            xaDataSource.init();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         /**
          * 设置分布式-- 主数据源
          */
         AtomikosDataSourceBean atomikosDataSourceBean = new AtomikosDataSourceBean();
         atomikosDataSourceBean.setXaDataSource(xaDataSource);
-        atomikosDataSourceBean.setUniqueResourceName("PrimaryDB");
-//        atomikosDataSourceBean.setMinPoolSize();
-//        atomikosDataSourceBean.setMaxPoolSize();
-//
-//        xaDataSource.setMaxLifetime();
-//        xaDataSource.setBorrowConnectionTimeout();
-//        xaDataSource.setLoginTimeout();
-//        xaDataSource.setMaintenanceInterval();
-//        xaDataSource.setMaxIdleTime();
-//        xaDataSource.setTestQuery();
-//        xaDataSource.setXaProperties();
+        atomikosDataSourceBean.setUniqueResourceName("primaryDataSource");
+        atomikosDataSourceBean.setXaDataSourceClassName(DruidXADataSource.class.getName());
+        Properties properties = new Properties();
+        for(Map.Entry entry :propertiesMap.entrySet()){
+            properties.put(entry.getKey(),entry.getValue());
+        }
+        atomikosDataSourceBean.setXaProperties(properties);
         System.err.println("主数据源注入成功.....");
         return atomikosDataSourceBean;
-
-//        return primaryDataSourceProperties().initializeDataSourceBuilder().build();
     }
 
     @Bean(name = "primarySqlSessionFactory")
@@ -99,12 +111,12 @@ public class DataSource1Config {
         return bean.getObject();
     }
 
-    @Bean(name = "primaryTransactionManager")
-    @ConfigurationProperties(prefix = "primary.datasource")
-    @Primary
-    public DataSourceTransactionManager TransactionManager(@Qualifier("primaryDataSource") DataSource dataSource) {
-        return new DataSourceTransactionManager(dataSource);
-    }
+//    @Bean(name = "primaryTransactionManager")
+//    @ConfigurationProperties(prefix = "primary.datasource")
+//    @Primary
+//    public DataSourceTransactionManager TransactionManager(@Qualifier("primaryDataSource") DataSource dataSource) {
+//        return new DataSourceTransactionManager(dataSource);
+//    }
 
     @Bean(name = "primarySqlSessionTemplate")
     @ConfigurationProperties(prefix = "primary.datasource")
@@ -112,4 +124,5 @@ public class DataSource1Config {
     public SqlSessionTemplate SqlSessionTemplate(@Qualifier("primarySqlSessionFactory") SqlSessionFactory sqlSessionFactory) throws Exception {
         return new SqlSessionTemplate(sqlSessionFactory);
     }
+
 }

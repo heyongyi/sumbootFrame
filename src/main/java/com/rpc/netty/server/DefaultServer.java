@@ -1,12 +1,12 @@
 package com.rpc.netty.server;
 
 import com.rpc.netty.common.DefaultServerInitializer;
+import com.rpc.netty.common.SocketServerInitializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -28,7 +28,8 @@ public class DefaultServer {
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(bossGroup, workGroup)
                 .channel(NioServerSocketChannel.class)
-                .childHandler(new DefaultServerInitializer(channelGroup))
+//                .childHandler(new DefaultServerInitializer(channelGroup))
+                .childHandler(new SocketServerInitializer(channelGroup))
                 .option(ChannelOption.SO_BACKLOG, 128)
                 .option(ChannelOption.SO_REUSEADDR, true)
                 .option(ChannelOption.SO_RCVBUF, 10 * 1024)

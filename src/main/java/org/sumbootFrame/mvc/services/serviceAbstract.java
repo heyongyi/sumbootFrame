@@ -105,7 +105,7 @@ public abstract class serviceAbstract implements ServiceInterface {
             return dealCatch(e);
         }
     }
-    @Transactional(value = "primaryTransactionManager",propagation = Propagation.REQUIRED,isolation = Isolation.DEFAULT,timeout=360,rollbackFor=RuntimeException.class)
+    @Transactional(value = "transactionManager",propagation = Propagation.REQUIRED,isolation = Isolation.DEFAULT,timeout=360,rollbackFor=RuntimeException.class)
     public ReturnUtil dealface() throws Exception {
         try {
             serviceLog("begin");
@@ -120,7 +120,7 @@ public abstract class serviceAbstract implements ServiceInterface {
             return dealCatch(e);
         }
     }
-    @Transactional(value = "primaryTransactionManager",propagation = Propagation.REQUIRED,isolation = Isolation.DEFAULT,timeout=360,rollbackFor=RuntimeException.class)
+    @Transactional(value = "transactionManager",propagation = Propagation.REQUIRED,isolation = Isolation.DEFAULT,timeout=360,rollbackFor=RuntimeException.class)
     public ReturnUtil initface() throws Exception {
         try {
             serviceLog("begin");

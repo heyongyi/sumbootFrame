@@ -33,13 +33,13 @@ public class RequestParser {
      * @throws IOException
      */
     public Map<String, String> parse() throws  IOException {
-        HttpMethod method = fullReq.method();
+        HttpMethod method = fullReq.getMethod();
 
         Map<String, String> parmMap = new HashMap<>();
 
         if (HttpMethod.GET == method) {
             // 是GET请求
-            QueryStringDecoder decoder = new QueryStringDecoder(fullReq.uri());
+            QueryStringDecoder decoder = new QueryStringDecoder(fullReq.getUri());
             decoder.parameters().entrySet().forEach( entry -> {
                 // entry.getValue()是一个List, 只取第一个元素
                 parmMap.put(entry.getKey(), entry.getValue().get(0));
