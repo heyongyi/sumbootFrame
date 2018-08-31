@@ -1,4 +1,4 @@
-package com.rpc.netty.common;
+package org.sumbootFrame.rpc.netty.common;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,26 +10,19 @@ import io.netty.handler.codec.http.CookieDecoder;
 import io.netty.handler.codec.http.DefaultCookie;
 import io.netty.handler.codec.http.ServerCookieEncoder;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import org.sumbootFrame.data.mao.RedisDao;
-import org.sumbootFrame.mvc.interfaces.ServiceInterface;
 import org.sumbootFrame.mvc.interfaces.ServiceRpcInterface;
 import org.sumbootFrame.tools.*;
 import org.sumbootFrame.tools.exception.MyException;
-import org.sumbootFrame.tools.mq.PubClientUtil;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 
-import javax.servlet.http.*;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+
 /*
 **目前只建议用于写后台能力接口
 ** 放弃session

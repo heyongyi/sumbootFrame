@@ -2,12 +2,10 @@ package org.sumbootFrame;
 
 import com.google.code.kaptcha.impl.DefaultKaptcha;
 import com.google.code.kaptcha.util.Config;
-import com.rpc.netty.server.DefaultServer;
+import org.sumbootFrame.rpc.netty.server.DefaultServer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
 import org.sumbootFrame.tools.config.KaptchaConfig;
 
 import java.util.Properties;

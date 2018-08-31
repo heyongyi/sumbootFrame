@@ -1,7 +1,7 @@
-package com.rpc.netty.server;
+package org.sumbootFrame.rpc.netty.server;
 
-import com.rpc.netty.common.DefaultServerInitializer;
-import com.rpc.netty.common.SocketServerInitializer;
+import io.netty.util.concurrent.GlobalEventExecutor;
+import org.sumbootFrame.rpc.netty.common.SocketServerInitializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -19,11 +19,10 @@ import java.net.InetSocketAddress;
  * Created by thinkpad on 2018/2/24.
  */
 public class DefaultServer {
-    private final ChannelGroup channelGroup = new DefaultChannelGroup(ImmediateEventExecutor.INSTANCE);
+    private final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);//ImmediateEventExecutor
 
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
     private final EventLoopGroup workGroup = new NioEventLoopGroup();
-    private Channel channel;
     public ChannelFuture start(InetSocketAddress address) {
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(bossGroup, workGroup)
@@ -36,15 +35,14 @@ public class DefaultServer {
                 .childOption(ChannelOption.SO_KEEPALIVE, true);
 
         ChannelFuture future = bootstrap.bind(address).syncUninterruptibly();
-        channel = future.channel();
         return future;
     }
 
 
     public void destroy() {
-        if(channel != null) {
-            channel.close();
-        }
+//        if(channel != null) {
+//            channel.close();
+//        }
         channelGroup.close();
         workGroup.shutdownGracefully();
         bossGroup.shutdownGracefully();

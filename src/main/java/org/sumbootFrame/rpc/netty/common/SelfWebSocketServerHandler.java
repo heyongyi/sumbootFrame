@@ -1,5 +1,7 @@
-package com.rpc.netty.common;
+package org.sumbootFrame.rpc.netty.common;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
@@ -9,9 +11,13 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.*;
-import io.netty.util.AttributeKey;
 import io.netty.util.CharsetUtil;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.sumbootFrame.tools.JedisClusterUtil;
+import org.sumbootFrame.tools.config.RedisConfig;
+import redis.clients.jedis.JedisCluster;
 
 import java.util.Date;
 import java.util.List;
@@ -20,19 +26,27 @@ import java.util.Map;
 /**
  * Created by heyongyi on 2018/8/24.
  */
+
 public class SelfWebSocketServerHandler extends SimpleChannelInboundHandler<Object> {
     private static final Logger logger = Logger.getLogger(WebSocketServerHandshaker.class.getName());
     private WebSocketServerHandshaker handshaker;
     private ChannelGroup group;
+    private JedisCluster jedis;
+    @Autowired
+    RedisConfig redisConfig;
     public SelfWebSocketServerHandler(ChannelGroup group){
         this.group = group;
+        if(redisConfig.getCluster() != null){
+            List<String> clusterNodes = redisConfig.getCluster().getNodes();
+            jedis = new JedisClusterUtil().cluster(redisConfig.getPassword(),(String[])clusterNodes.subList(0,redisConfig.getCluster().getMaxRedirects()).toArray(new String[redisConfig.getCluster().getMaxRedirects()]));
+        }
     }
     /**
      * channel 通道 action 活跃的 当客户端主动链接服务端的链接后，这个通道就是活跃的了。也就是客户端与服务端建立了通信通道并且可以传输数据
      */
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-    // 添加
+        // 添加
         group.add(ctx.channel());
         System.out.println("客户端与服务端连接开启：" + ctx.channel().remoteAddress().toString());
     }
@@ -43,22 +57,21 @@ public class SelfWebSocketServerHandler extends SimpleChannelInboundHandler<Obje
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
     // 移除
         group.remove(ctx.channel());
+        ctx.close();
         System.out.println("客户端与服务端连接关闭：" + ctx.channel().remoteAddress().toString());
     }
 
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, Object msg) throws Exception {
+
+
         // 传统的HTTP接入
         if (msg instanceof FullHttpRequest) {
-            handleHttpRequest(ctx, ((FullHttpRequest) msg));
+           handleHttpRequest(ctx, ((FullHttpRequest) msg));
         // WebSocket接入
         } else if (msg instanceof WebSocketFrame) {
             System.out.println(handshaker.uri());
-            if("anzhuo".equals(ctx.attr(AttributeKey.valueOf("type")).get())){
-                handlerWebSocketFrame(ctx, (WebSocketFrame) msg);
-            }else{
-                handlerWebSocketFrame2(ctx, (WebSocketFrame) msg);
-            }
+            handlerWebSocketFrame(ctx, (WebSocketFrame) msg);
         }
     }
     /**
@@ -71,6 +84,7 @@ public class SelfWebSocketServerHandler extends SimpleChannelInboundHandler<Obje
     private void handlerWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
         // 判断是否关闭链路的指令
         if (frame instanceof CloseWebSocketFrame) {
+
             System.out.println(1);
             handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
             return;
@@ -88,56 +102,46 @@ public class SelfWebSocketServerHandler extends SimpleChannelInboundHandler<Obje
         }
         // 返回应答消息
         String request = ((TextWebSocketFrame) frame).text();
+        JsonParser jsonParser = new JsonParser();
+        JsonObject msgJson = jsonParser.parse(request).getAsJsonObject();
+        if(msgJson.has("KOAL_CERT_CN")){
+            jedis.set(msgJson.get("KOAL_CERT_CN").getAsString(),ctx.channel().id().asShortText());
+        }
         System.out.println("服务端收到：" + request);
 
         logger.info(String.format("%s received %s", ctx.channel(), request));
 
         TextWebSocketFrame tws = new TextWebSocketFrame(new Date().toString() + ctx.channel().id() + "：" + request);
         // 群发
-        group.writeAndFlush(tws);
+//        group.writeAndFlush(tws);
         // 返回【谁发的发给谁】
-        // ctx.channel().writeAndFlush(tws);
+         ctx.channel().writeAndFlush(tws);
     }
-    private void handlerWebSocketFrame2(ChannelHandlerContext ctx, WebSocketFrame frame) {
-        // 判断是否关闭链路的指令
-        if (frame instanceof CloseWebSocketFrame) {
-            handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
-            return;
-        }
-        // 判断是否ping消息
-        if (frame instanceof PingWebSocketFrame) {
-            ctx.channel().write(new PongWebSocketFrame(frame.content().retain()));
-            return;
-        }
-        // 本例程仅支持文本消息，不支持二进制消息
-        if (!(frame instanceof TextWebSocketFrame)) {
-            System.out.println("本例程仅支持文本消息，不支持二进制消息");
-            throw new UnsupportedOperationException(
-                    String.format("%s frame types not supported", frame.getClass().getName()));
-        }
-        // 返回应答消息
-        String request = ((TextWebSocketFrame) frame).text();
-        System.out.println("服务端2收到：" + request);
-        logger.info(String.format("%s received %s", ctx.channel(), request));
-        TextWebSocketFrame tws = new TextWebSocketFrame(new Date().toString() + ctx.channel().id() + "：" + request);
-        // 群发
-        group.writeAndFlush(tws);
-    // 返回【谁发的发给谁】
-    // ctx.channel().writeAndFlush(tws);
-    }
+
     private void handleHttpRequest(ChannelHandlerContext ctx, FullHttpRequest req) {
         // 如果HTTP解码失败，返回HHTP异常
-        if (!req.getDecoderResult().isSuccess() || (!"websocket".equals(req.headers().get("Upgrade")))) {
-            sendHttpResponse(ctx, req,
-                    new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST));
+        if (!req.getDecoderResult().isSuccess()) {
+            sendHttpResponse(ctx, req,new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST));
             return;
         }
         //获取url后置参数
         HttpMethod method=req.getMethod();
         String uri=req.getUri();
-        QueryStringDecoder queryStringDecoder = new QueryStringDecoder(uri);
-        Map<String, List<String>> parameters = queryStringDecoder.parameters();
-        System.out.println(parameters.get("request").get(0));
+//        QueryStringDecoder queryStringDecoder = new QueryStringDecoder(uri);
+//        Map<String, List<String>> parameters = queryStringDecoder.parameters();
+//        System.out.println(parameters.get("request").get(0));
+
+
+        // 构造握手响应返回，本机测试
+        WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(
+                "ws://"+req.headers().get(HttpHeaders.Names.HOST)+uri, null, false);
+        handshaker = wsFactory.newHandshaker(req);
+        if (handshaker == null) {
+            WebSocketServerHandshakerFactory.sendUnsupportedWebSocketVersionResponse(ctx.channel());
+        } else {
+            handshaker.handshake(ctx.channel(), req);
+        }
+
 
     }
     private static void sendHttpResponse(ChannelHandlerContext ctx, FullHttpRequest req, DefaultFullHttpResponse res) {
@@ -161,4 +165,6 @@ public class SelfWebSocketServerHandler extends SimpleChannelInboundHandler<Obje
         cause.printStackTrace();
         ctx.close();
     }
+
+
 }

@@ -1,4 +1,4 @@
-package com.rpc.netty.common;
+package org.sumbootFrame.rpc.netty.common;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
